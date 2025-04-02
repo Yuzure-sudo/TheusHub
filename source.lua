@@ -462,3 +462,399 @@ local function createAdvancedESP(object, espType)
         end
     end)
 end
+
+-- Sistema de Auto Chest Farm melhorado
+local ChestSettings = {
+    MinimumDistance = 50,
+    MaximumDistance = 5000,
+    CollectDelay = 1,
+    IgnoreList = {},
+    ChestTypes = {
+        "Chest",
+        "Chest1",
+        "Chest2",
+        "Chest3"
+    }
+}
+
+local function isChest(object)
+    for _, chestType in ipairs(ChestSettings.ChestTypes) do
+        if object.Name:find(chestType) then
+            return true
+        end
+    end
+    return false
+end
+
+local function enhancedChestFarm()
+    while Settings.ChestFarm do
+        local nearestChest = nil
+        local shortestDistance = ChestSettings.MaximumDistance
+
+        for _, object in pairs(workspace:GetChildren()) do
+            if isChest(object) and not ChestSettings.IgnoreList[object] then
+                local distance = (object.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance and distance > ChestSettings.MinimumDistance then
+                    shortestDistance = distance
+                    nearestChest = object
+                end
+            end
+        end
+
+        if nearestChest then
+            -- Tween para o baú
+            local tweenInfo = TweenInfo.new(
+                (shortestDistance/1000), -- Tempo baseado na distância
+                Enum.EasingStyle.Linear,
+                Enum.EasingDirection.Out
+            )
+            
+            local tween = TweenService:Create(
+                Player.Character.HumanoidRootPart,
+                tweenInfo,
+                {CFrame = CFrame.new(nearestChest.Position + Vector3.new(0, 2, 0))}
+            )
+            tween:Play()
+            tween.Completed:Wait()
+
+            -- Tentar coletar o baú
+            local args = {
+                [1] = "CollectChest",
+                [2] = nearestChest
+            }
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+            
+            -- Adicionar à lista de ignorados
+            ChestSettings.IgnoreList[nearestChest] = true
+            wait(ChestSettings.CollectDelay)
+        else
+            wait(1)
+        end
+    end
+end
+
+-- Sistema de Frutas melhorado
+local FruitSettings = {
+    AutoCollect = false,
+    NotifyOnSpawn = true,
+    MinimumDistance = 50,
+    MaximumDistance = 5000,
+    CollectDelay = 1
+}
+
+local function isFruit(object)
+    return object.Name:find("Fruit") ~= nil
+end
+
+local function notifyFruit(fruitName, position)
+    local notification = Instance.new("TextLabel")
+    notification.Size = UDim2.new(0, 200, 0, 50)
+    notification.Position = UDim2.new(0.7, 0, 0.8 - (#workspace:GetChildren() * 0.05), 0)
+    notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    notification.BackgroundTransparency = 0.5
+    notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+    notification.Text = fruitName .. " spawned!"
+    notification.Parent = game.CoreGui
+    
+    game:GetService("Debris"):AddItem(notification, 5)
+end
+
+-- Monitor de Frutas
+workspace.ChildAdded:Connect(function(child)
+    if isFruit(child) and FruitSettings.NotifyOnSpawn then
+        notifyFruit(child.Name, child.Position)
+        
+        if FruitSettings.AutoCollect then
+            local distance = (child.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+            if distance < FruitSettings.MaximumDistance then
+                local tweenInfo = TweenInfo.new(
+                    (distance/1000),
+                    Enum.EasingStyle.Linear,
+                    Enum.EasingDirection.Out
+                )
+                
+                local tween = TweenService:Create(
+                    Player.Character.HumanoidRootPart,
+                    tweenInfo,
+                    {CFrame = CFrame.new(child.Position + Vector3.new(0, 2, 0))}
+                )
+                tween:Play()
+            end
+        end
+    end
+end)
+
+-- Interface melhorada
+local function createEnhancedGUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "TheusHubEnhanced"
+    ScreenGui.Parent = game.CoreGui
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0.8, 0, 0.5, -200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = MainFrame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.BackgroundTransparency = 1
+    Title.Text = "Theus Hub"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 24
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = MainFrame
+    
+    local TabsFrame = Instance.new("Frame")
+    TabsFrame.Name = "Tabs"
+    TabsFrame.Size = UDim2.new(1, 0, 0, 30)
+    TabsFrame.Position = UDim2.new(0, 0, 0, 40)
+    TabsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TabsFrame.BorderSizePixel = 0
+    TabsFrame.Parent = MainFrame
+    
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Name = "Content"
+    ContentFrame.Size = UDim2.new(1, 0, 1, -70)
+    ContentFrame.Position = UDim2.new(0, 0, 0, 70)
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.Parent = MainFrame
+    
+    -- Criar tabs
+    local tabs = {
+        {name = "Farm", content = {
+            {type = "toggle", text = "Auto Farm", callback = function(value) 
+                Settings.AutoFarm = value 
+                if value then enhancedAutoFarm() end 
+            end},
+            {type = "toggle", text = "Chest Farm", callback = function(value) 
+                Settings.ChestFarm = value 
+                if value then enhancedChestFarm() end 
+            end},
+            {type = "toggle", text = "Auto Fruit", callback = function(value) 
+                FruitSettings.AutoCollect = value 
+            end}
+        }},
+        {name = "Teleport", content = IslandLocations},
+        {name = "Combat", content = {
+            {type = "slider", text = "Attack Speed", min = 0.1, max = 2, default = CombatSettings.AttackSpeed},
+            {type = "slider", text = "Hover Height", min = 10, max = 50, default = CombatSettings.HoverHeight}
+        }},
+        {name = "ESP", content = {
+            {type = "toggle", text = "Player ESP", callback = function(value) Settings.ESP.Players = value end},
+            {type = "toggle", text = "Fruit ESP", callback = function(value) Settings.ESP.Fruits = value end}
+        }}
+    }    -- Função para criar botão de tab
+    local function createTab(name, index)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Size = UDim2.new(1/#tabs, 0, 1, 0)
+        TabButton.Position = UDim2.new((index-1)/#tabs, 0, 0, 0)
+        TabButton.BackgroundTransparency = 1
+        TabButton.Text = name
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.Parent = TabsFrame
+        return TabButton
+    end
+
+    -- Função para criar conteúdo
+    local function createContent(contentInfo)
+        local Container = Instance.new("ScrollingFrame")
+        Container.Size = UDim2.new(1, -20, 1, -10)
+        Container.Position = UDim2.new(0, 10, 0, 5)
+        Container.BackgroundTransparency = 1
+        Container.ScrollBarThickness = 4
+        Container.Visible = false
+        Container.Parent = ContentFrame
+
+        local UIListLayout = Instance.new("UIListLayout")
+        UIListLayout.Padding = UDim.new(0, 10)
+        UIListLayout.Parent = Container
+
+        for i, item in ipairs(contentInfo) do
+            if item.type == "toggle" then
+                local ToggleButton = Instance.new("TextButton")
+                ToggleButton.Size = UDim2.new(1, 0, 0, 40)
+                ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                ToggleButton.Text = item.text
+                ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                ToggleButton.Font = Enum.Font.Gotham
+                ToggleButton.Parent = Container
+
+                local UICorner = Instance.new("UICorner")
+                UICorner.CornerRadius = UDim.new(0, 6)
+                UICorner.Parent = ToggleButton
+
+                local ToggleState = false
+                ToggleButton.MouseButton1Click:Connect(function()
+                    ToggleState = not ToggleState
+                    ToggleButton.BackgroundColor3 = ToggleState and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(45, 45, 45)
+                                        if item.callback then
+                        item.callback(ToggleState)
+                    end
+                end)
+            elseif item.type == "slider" then
+                local SliderFrame = Instance.new("Frame")
+                SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+                SliderFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                SliderFrame.Parent = Container
+
+                local UICorner = Instance.new("UICorner")
+                UICorner.CornerRadius = UDim.new(0, 6)
+                UICorner.Parent = SliderFrame
+
+                local SliderText = Instance.new("TextLabel")
+                SliderText.Size = UDim2.new(1, 0, 0, 30)
+                SliderText.BackgroundTransparency = 1
+                SliderText.Text = item.text .. ": " .. item.default
+                SliderText.TextColor3 = Color3.fromRGB(255, 255, 255)
+                SliderText.Font = Enum.Font.Gotham
+                SliderText.Parent = SliderFrame
+
+                local SliderBar = Instance.new("Frame")
+                SliderBar.Size = UDim2.new(0.9, 0, 0, 4)
+                SliderBar.Position = UDim2.new(0.05, 0, 0.7, 0)
+                SliderBar.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+                SliderBar.Parent = SliderFrame
+
+                local SliderFill = Instance.new("Frame")
+                SliderFill.Size = UDim2.new((item.default - item.min)/(item.max - item.min), 0, 1, 0)
+                SliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+                SliderFill.Parent = SliderBar
+
+                local UICorner2 = Instance.new("UICorner")
+                UICorner2.CornerRadius = UDim.new(1, 0)
+                UICorner2.Parent = SliderBar
+
+                local UICorner3 = Instance.new("UICorner")
+                UICorner3.CornerRadius = UDim.new(1, 0)
+                UICorner3.Parent = SliderFill
+
+                SliderBar.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        local dragging = true
+                        
+                        local function update()
+                            local mousePos = UserInputService:GetMouseLocation().X
+                            local barPos = SliderBar.AbsolutePosition.X
+                            local barWidth = SliderBar.AbsoluteSize.X
+                            local percent = math.clamp((mousePos - barPos) / barWidth, 0, 1)
+                            local value = item.min + (item.max - item.min) * percent
+                            
+                            SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+                            SliderText.Text = item.text .. ": " .. string.format("%.1f", value)
+                            
+                            if item.callback then
+                                item.callback(value)
+                            end
+                        end
+
+                        RunService.RenderStepped:Connect(function()
+                            if dragging then
+                                update()
+                            end
+                        end)
+
+                        input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                dragging = false
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+
+        return Container
+    end
+
+    -- Criar todas as tabs e conteúdo
+    local tabButtons = {}
+    local tabContents = {}
+    
+    for i, tab in ipairs(tabs) do
+        local button = createTab(tab.name, i)
+        local content = createContent(tab.content)
+        
+        tabButtons[tab.name] = button
+        tabContents[tab.name] = content
+        
+        button.MouseButton1Click:Connect(function()
+            for _, btn in pairs(tabButtons) do
+                btn.BackgroundTransparency = 1
+            end
+            for _, cont in pairs(tabContents) do
+                cont.Visible = false
+            end
+            
+            button.BackgroundTransparency = 0.8
+            content.Visible = true
+        end)
+        
+        if i == 1 then
+            button.BackgroundTransparency = 0.8
+            content.Visible = true
+        end
+    end
+
+    -- Tornar a interface arrastável
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    Title.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Title.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- Inicializar
+createEnhancedGUI()
+
+-- Começar loops de atualização
+RunService.RenderStepped:Connect(function()
+    if Settings.ESP.Players or Settings.ESP.Fruits then
+        updateESP()
+    end
+end)
+
+-- Retornar configurações para acesso externo
+return {
+    Settings = Settings,
+    CombatSettings = CombatSettings,
+    FruitSettings = FruitSettings,
+    ChestSettings = ChestSettings
+}
