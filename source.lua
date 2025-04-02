@@ -1,365 +1,429 @@
--- Serviços e Configurações Otimizadas
+-- Serviços Principais
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local VirtualUser = game:GetService("VirtualUser")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Variáveis Globais Otimizadas
 local Player = Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
 
--- Configurações Compactas usando Metatables para Otimização
-local Settings = setmetatable({
-    Farm = {Active = false, Height = 25},
-    Combat = {Fast = false, Skills = false},
-    Misc = {Fruits = false, Bosses = false},
-    Visual = {ESP = false},
-}, {
-    __index = function(t,k) 
-        return rawget(t,k) or false 
-    end
-})
+-- Sistema de Login Seguro
+local function CreateLoginUI()
+    local LoginGui = Instance.new("ScreenGui")
+    LoginGui.Name = "ZeusLoginSystem"
+    LoginGui.Parent = game:GetService("CoreGui")
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 300, 0, 200)
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = LoginGui
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.Text = "Zeus Hub V3"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 24
+    Title.Font = Enum.Font.GothamBold
+    Title.BackgroundTransparency = 1
+    Title.Parent = MainFrame
+    
+    local KeyInput = Instance.new("TextBox")
+    KeyInput.Size = UDim2.new(0.8, 0, 0, 35)
+    KeyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
+    KeyInput.PlaceholderText = "Insira sua Key"
+    KeyInput.Text = ""
+    KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    KeyInput.BorderSizePixel = 0
+    KeyInput.Parent = MainFrame
+    
+    local LoginButton = Instance.new("TextButton")
+    LoginButton.Size = UDim2.new(0.8, 0, 0, 35)
+    LoginButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+    LoginButton.Text = "Login"
+    LoginButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LoginButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    LoginButton.BorderSizePixel = 0
+    LoginButton.Parent = MainFrame
+    
+    return {
+        gui = LoginGui,
+        button = LoginButton,
+        input = KeyInput
+    }
+end
 
--- Sistema de Cache para Performance
+-- Sistema de Configurações Avançado
+local Settings = {
+    Farm = {
+        Active = false,
+        AutoQuest = true,
+        Height = 25,
+        Distance = 5,
+        Method = "Behind", -- Behind, Above, Below
+        FastAttack = true,
+        AutoSkills = true
+    },
+    Fruits = {
+        AutoStore = true,
+        AutoSnipe = true,
+        TargetFruits = {
+            "Dragon-Dragon",
+            "Soul-Soul",
+            "Venom-Venom",
+            "Shadow-Shadow"
+        },
+        MinimumValue = 1000000
+    },
+    Combat = {
+        FastAttackDelay = 0.1,
+        SkillsDelay = 1,
+        AutoHaki = true,
+        SafeHealth = 25
+    },
+    Misc = {
+        AutoRejoin = true,
+        HideNames = true,
+        AntiAFK = true
+    }
+}
+
+-- Sistema de Cache Avançado
 local Cache = {
     Weapons = {},
+    Fruits = {},
+    Quests = {},
     Mobs = {},
-    NPCs = {}
-}
-
--- Sistema de Combate Ultra Otimizado
-local CombatSystem = {
-    getWeapon = function()
-        if #Cache.Weapons > 0 then return Cache.Weapons[1] end
-        
-        local best = {tool = nil, damage = 0}
-        for _,v in pairs(Player.Backpack:GetChildren()) do
-            if v:IsA("Tool") and v:FindFirstChild("ToolTip") then
-                local dmg = tonumber(v.ToolTip.Value) or 0
-                if dmg > best.damage then
-                    best = {tool = v, damage = dmg}
-                end
-            end
-        end
-        
-        table.insert(Cache.Weapons, best.tool)
-        return best.tool
-    end,
+    LastPositions = {},
+    Cooldowns = {},
     
-    attack = function()
-        game:GetService("VirtualUser"):CaptureController()
-        game:GetService("VirtualUser"):ClickButton1(Vector2.new())
-        
-        local args = {
-            [1] = "ComboHit",
-            [2] = "Melee"
-        }
-        game:GetService("ReplicatedStorage").Remotes.Combat:FireServer(unpack(args))
-    end,
-    
-    useSkills = function()
-        for _,key in pairs({"Z","X","C","V","F"}) do
-            game:GetService("VirtualUser"):CaptureController()
-            game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
-            wait()
-            game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
-        end
-    end
-}
-
--- Sistema de Quest Ultra Otimizado
-local QuestSystem = {
-    current = nil,
-    
-    getQuest = function()
-        local level = Player.Level.Value
-        local quests = {
-            {l=1, n="Bandit", q="BanditQuest1"},
-            {l=10, n="Monkey", q="MonkeyQuest"},
-            {l=15, n="Gorilla", q="GorillaQuest"},
-            -- Mais quests aqui
-        }
-        
-        for i=#quests,1,-1 do
-            if level >= quests[i].l then
-                return quests[i]
+    clearCache = function()
+        for k, v in pairs(Cache) do
+            if type(v) == "table" then
+                table.clear(v)
             end
         end
     end,
     
-    start = function(quest)
-        if not Player.PlayerGui.Main.Quest.Visible then
-            local npc = workspace.NPCs:FindFirstChild(quest.n.." Quest Giver")
-            if npc then
-                local cf = npc.HumanoidRootPart.CFrame
-                local tween = TweenService:Create(
-                    Character.HumanoidRootPart,
-                    TweenInfo.new(0.5),
-                    {CFrame = cf * CFrame.new(0,0,3)}
-                )
-                tween:Play()
-                tween.Completed:Wait()
-                
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
-                    "StartQuest", quest.q, quest.l
-                )
+    updateCache = function()
+        Cache.Weapons = {}
+        for _, tool in pairs(Player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                table.insert(Cache.Weapons, {
+                    Name = tool.Name,
+                    Tool = tool,
+                    Damage = tool:FindFirstChild("ToolTip") and tonumber(tool.ToolTip.Value) or 0
+                })
             end
         end
+        
+        table.sort(Cache.Weapons, function(a,b)
+            return a.Damage > b.Damage
+        end)
     end
 }
 
 -- Sistema de Farm Ultra Otimizado
 local FarmSystem = {
-    running = false,
+    State = {
+        CurrentTarget = nil,
+        CurrentQuest = nil,
+        Farming = false,
+        LastAttack = 0
+    },
     
-    start = function()
-        if FarmSystem.running then return end
-        FarmSystem.running = true
+    getClosestMob = function(questMob)
+        local closest = {distance = math.huge, mob = nil}
         
-        spawn(function()
-            while Settings.Farm.Active and FarmSystem.running do
-                local quest = QuestSystem.getQuest()
-                if quest then
-                    QuestSystem.start(quest)
-                    
-                    for _,mob in pairs(workspace.Enemies:GetChildren()) do
-                        if mob.Name:find(quest.n) and mob:FindFirstChild("Humanoid") 
-                        and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
-                            repeat
-                                local weapon = CombatSystem.getWeapon()
-                                if weapon then
-                                    Character.Humanoid:EquipTool(weapon)
-                                end
-                                
-                                local cf = mob.HumanoidRootPart.CFrame * 
-                                         CFrame.new(0,Settings.Farm.Height,0)
-                                Character.HumanoidRootPart.CFrame = cf
-                                
-                                if Settings.Combat.Fast then
-                                    CombatSystem.attack()
-                                end
-                                
-                                if Settings.Combat.Skills then
-                                    CombatSystem.useSkills()
-                                end
-                                
-                                RunService.Heartbeat:Wait()
-                            until not mob:FindFirstChild("Humanoid") 
-                                  or mob.Humanoid.Health <= 0 
-                                  or not Settings.Farm.Active
-                        end
-                    end
+        for _, mob in pairs(workspace.Enemies:GetChildren()) do
+            if mob.Name:find(questMob) and mob:FindFirstChild("Humanoid") 
+            and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                local distance = (HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
+                if distance < closest.distance then
+                    closest = {distance = distance, mob = mob}
                 end
-                wait()
             end
-        end)
-    end,
-    
-    stop = function()
-        FarmSystem.running = false
-    end
-}-- Interface Moderna e Otimizada para Mobile
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ZeusHubV2"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("CoreGui")
-
--- Utilitários de UI
-local function Create(type, properties)
-    local instance = Instance.new(type)
-    for k, v in pairs(properties or {}) do
-        instance[k] = v
-    end
-    return instance
-end
-
--- Frame Principal Compacto
-local MainFrame = Create("Frame", {
-    Name = "MainFrame",
-    Size = UDim2.new(0, 250, 0, 300), -- Tamanho reduzido para mobile
-    Position = UDim2.new(0.5, -125, 0.5, -150),
-    BackgroundColor3 = Color3.fromRGB(25, 25, 35),
-    BorderSizePixel = 0,
-    Active = true,
-    Draggable = true,
-    Parent = ScreenGui
-})
-
--- Título Elegante
-local Title = Create("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 25),
-    BackgroundColor3 = Color3.fromRGB(30, 30, 40),
-    Text = "Zeus Hub V2",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    Font = Enum.Font.GothamBold,
-    Parent = MainFrame
-})
-
--- Subtítulo
-local SubTitle = Create("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 20),
-    Position = UDim2.new(0, 0, 0, 25),
-    BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-    Text = "Em desenvolvimento por Zeus",
-    TextColor3 = Color3.fromRGB(200, 200, 200),
-    TextSize = 12,
-    Font = Enum.Font.GothamSemibold,
-    Parent = MainFrame
-})
-
--- Container Principal
-local Container = Create("ScrollingFrame", {
-    Size = UDim2.new(1, -20, 1, -55),
-    Position = UDim2.new(0, 10, 0, 50),
-    BackgroundTransparency = 1,
-    BorderSizePixel = 0,
-    ScrollBarThickness = 2,
-    Parent = MainFrame
-})
-
--- Layout
-local UIListLayout = Create("UIListLayout", {
-    Padding = UDim.new(0, 5),
-    Parent = Container
-})
-
--- Função para Criar Toggles
-local function CreateToggle(text, setting)
-    local toggle = Create("Frame", {
-        Size = UDim2.new(1, 0, 0, 35),
-        BackgroundColor3 = Color3.fromRGB(35, 35, 45),
-        Parent = Container
-    })
-
-    Create("UICorner", {
-        CornerRadius = UDim.new(0, 6),
-        Parent = toggle
-    })
-
-    local label = Create("TextLabel", {
-        Size = UDim2.new(1, -50, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = text,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        Font = Enum.Font.GothamSemibold,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = toggle
-    })
-
-    local button = Create("TextButton", {
-        Size = UDim2.new(0, 35, 0, 20),
-        Position = UDim2.new(1, -40, 0.5, -10),
-        BackgroundColor3 = Color3.fromRGB(255, 50, 50),
-        Text = "",
-        Parent = toggle
-    })
-
-    Create("UICorner", {
-        CornerRadius = UDim.new(0, 10),
-        Parent = button
-    })
-
-    button.MouseButton1Click:Connect(function()
-        if setting == "Farm.Active" then
-            Settings.Farm.Active = not Settings.Farm.Active
-            if Settings.Farm.Active then
-                FarmSystem.start()
-            else
-                FarmSystem.stop()
-            end
-        elseif setting == "Combat.Fast" then
-            Settings.Combat.Fast = not Settings.Combat.Fast
-        elseif setting == "Combat.Skills" then
-            Settings.Combat.Skills = not Settings.Combat.Skills
-        elseif setting == "Misc.Fruits" then
-            Settings.Misc.Fruits = not Settings.Misc.Fruits
         end
         
-        button.BackgroundColor3 = Settings[setting:split(".")[1]][setting:split(".")[2]] 
-            and Color3.fromRGB(0, 255, 125) 
-            or Color3.fromRGB(255, 50, 50)
+        return closest.mob
+    end,
+    
+    teleportToPosition = function(position, offset)
+        local targetCFrame = typeof(position) == "CFrame" and position or CFrame.new(position)
+        
+        if offset then
+            targetCFrame = targetCFrame * offset
+        end
+        
+        local tween = TweenService:Create(
+            HumanoidRootPart,
+            TweenInfo.new(
+                (HumanoidRootPart.Position - targetCFrame.Position).Magnitude/500,
+                Enum.EasingStyle.Linear
+            ),
+            {CFrame = targetCFrame}
+        )
+        
+        tween:Play()
+        return tween
+    end,
+    
+    attack = function()
+        if tick() - FarmSystem.State.LastAttack < Settings.Combat.FastAttackDelay then
+            return
+        end
+        
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton1(Vector2.new())
+        
+        if Settings.Combat.FastAttack then
+            for i = 1, 3 do
+                ReplicatedStorage.Remotes.Combat:FireServer("ComboHit", "Melee")
+                task.wait(0.1)
+            end
+        end
+        
+        FarmSystem.State.LastAttack = tick()
+    end
+}-- Sistema de Interface Avançada
+local Interface = {
+    Colors = {
+        Background = Color3.fromRGB(25, 25, 35),
+        Secondary = Color3.fromRGB(35, 35, 45),
+        Accent = Color3.fromRGB(0, 120, 255),
+        Text = Color3.fromRGB(255, 255, 255),
+        Success = Color3.fromRGB(0, 255, 125),
+        Error = Color3.fromRGB(255, 50, 50)
+    },
+    
+    Elements = {},
+    
+    Create = function(type, properties)
+        local instance = Instance.new(type)
+        for k, v in pairs(properties or {}) do
+            instance[k] = v
+        end
+        return instance
+    end,
+    
+    CreateMainUI = function()
+        local ScreenGui = Interface.Create("ScreenGui", {
+            Name = "ZeusHubV3",
+            ResetOnSpawn = false,
+            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+            Parent = game:GetService("CoreGui")
+        })
+        
+        local MainFrame = Interface.Create("Frame", {
+            Name = "MainFrame",
+            Size = UDim2.new(0, 600, 0, 400),
+            Position = UDim2.new(0.5, -300, 0.5, -200),
+            BackgroundColor3 = Interface.Colors.Background,
+            BorderSizePixel = 0,
+            Active = true,
+            Draggable = true,
+            Parent = ScreenGui
+        })
+        
+        -- Barra Superior
+        local TopBar = Interface.Create("Frame", {
+            Size = UDim2.new(1, 0, 0, 30),
+            BackgroundColor3 = Interface.Colors.Secondary,
+            Parent = MainFrame
+        })
+        
+        Interface.Create("TextLabel", {
+            Size = UDim2.new(0.5, 0, 1, 0),
+            Position = UDim2.new(0, 10, 0, 0),
+            BackgroundTransparency = 1,
+            Text = "Zeus Hub V3 - Premium",
+            TextColor3 = Interface.Colors.Text,
+            TextSize = 18,
+            Font = Enum.Font.GothamBold,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = TopBar
+        })
+        
+        -- Sistema de Tabs
+        local TabContainer = Interface.Create("Frame", {
+            Size = UDim2.new(0, 150, 1, -30),
+            Position = UDim2.new(0, 0, 0, 30),
+            BackgroundColor3 = Interface.Colors.Secondary,
+            Parent = MainFrame
+        })
+        
+        local ContentContainer = Interface.Create("Frame", {
+            Size = UDim2.new(1, -150, 1, -30),
+            Position = UDim2.new(0, 150, 0, 30),
+            BackgroundColor3 = Interface.Colors.Background,
+            Parent = MainFrame
+        })
+        
+        return {
+            ScreenGui = ScreenGui,
+            MainFrame = MainFrame,
+            TabContainer = TabContainer,
+            ContentContainer = ContentContainer
+        }
+    end,
+    
+    CreateTab = function(name, icon)
+        local tab = Interface.Create("TextButton", {
+            Size = UDim2.new(1, 0, 0, 40),
+            BackgroundColor3 = Interface.Colors.Secondary,
+            Text = name,
+            TextColor3 = Interface.Colors.Text,
+            TextSize = 14,
+            Font = Enum.Font.GothamSemibold
+        })
+        
+        local content = Interface.Create("ScrollingFrame", {
+            Size = UDim2.new(1, -20, 1, -20),
+            Position = UDim2.new(0, 10, 0, 10),
+            BackgroundTransparency = 1,
+            ScrollBarThickness = 2,
+            Visible = false
+        })
+        
+        return {tab = tab, content = content}
+    end
+}
+
+-- Sistema de Frutas Avançado
+local FruitSystem = {
+    FruitList = {},
+    
+    initialize = function()
+        for _, fruit in pairs(workspace:GetChildren()) do
+            if fruit.Name:find("Fruit") then
+                table.insert(FruitSystem.FruitList, {
+                    Name = fruit.Name,
+                    Position = fruit:GetPivot().Position,
+                    Value = FruitSystem.getFruitValue(fruit.Name)
+                })
+            end
+        end
+    end,
+    
+    getFruitValue = function(fruitName)
+        local values = {
+            ["Dragon-Dragon"] = 5000000,
+            ["Soul-Soul"] = 4500000,
+            ["Venom-Venom"] = 4000000,
+            ["Shadow-Shadow"] = 3500000
+        }
+        return values[fruitName] or 0
+    end,
+    
+    autoSnipe = function()
+        for _, fruit in pairs(FruitSystem.FruitList) do
+            if fruit.Value >= Settings.Fruits.MinimumValue then
+                FarmSystem.teleportToPosition(fruit.Position)
+                wait(0.5)
+                -- Implementar lógica de coleta
+            end
+        end
+    end
+}
+
+-- Sistema de Combate Avançado
+local CombatSystem = {
+    Skills = {
+        Z = {Cooldown = 4.5, LastUse = 0},
+        X = {Cooldown = 6.0, LastUse = 0},
+        C = {Cooldown = 8.0, LastUse = 0},
+        V = {Cooldown = 10.0, LastUse = 0}
+    },
+    
+    useSkill = function(skill)
+        local skillData = CombatSystem.Skills[skill]
+        if tick() - skillData.LastUse >= skillData.Cooldown then
+            VirtualUser:CaptureController()
+            VirtualUser:Button1Down(Vector2.new(0,0))
+            wait()
+            VirtualUser:Button1Up(Vector2.new(0,0))
+            skillData.LastUse = tick()
+        end
+    end,
+    
+    autoSkills = function()
+        if Settings.Combat.AutoSkills then
+            for skill, _ in pairs(CombatSystem.Skills) do
+                CombatSystem.useSkill(skill)
+            end
+        end
+    end,
+    
+    checkSafety = function()
+        if Humanoid.Health <= (Humanoid.MaxHealth * (Settings.Combat.SafeHealth / 100)) then
+            return false
+        end
+        return true
+    end
+}
+
+-- Sistema de Teleporte
+local TeleportSystem = {
+    Locations = {
+        ["First Island"] = Vector3.new(1000, 100, 1000),
+        ["Second Island"] = Vector3.new(2000, 100, 2000),
+        -- Adicionar mais localizações
+    },
+    
+    teleportTo = function(location)
+        if TeleportSystem.Locations[location] then
+            FarmSystem.teleportToPosition(TeleportSystem.Locations[location])
+        end
+    end
+}
+
+-- Sistema de Notificações
+local NotificationSystem = {
+    create = function(text, duration)
+        local notif = Interface.Create("Frame", {
+            Size = UDim2.new(0, 250, 0, 60),
+            Position = UDim2.new(1, -270, 1, -80),
+            BackgroundColor3 = Interface.Colors.Secondary,
+            Parent = Interface.Elements.ScreenGui
+        })
+        
+        Interface.Create("TextLabel", {
+            Size = UDim2.new(1, -20, 1, 0),
+            Position = UDim2.new(0, 10, 0, 0),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = Interface.Colors.Text,
+            TextSize = 14,
+            Font = Enum.Font.GothamSemibold,
+            Parent = notif
+        })
+        
+        game:GetService("Debris"):AddItem(notif, duration or 3)
+    end
+}
+
+-- Inicialização
+local function Initialize()
+    local loginUI = CreateLoginUI()
+    loginUI.button.MouseButton1Click:Connect(function()
+        if loginUI.input.Text == "theusgostoso" then
+            loginUI.gui:Destroy()
+            local ui = Interface.CreateMainUI()
+            -- Iniciar sistemas
+            FarmSystem.start()
+            FruitSystem.initialize()
+            NotificationSystem.create("Zeus Hub V3 iniciado com sucesso!", 5)
+        else
+            NotificationSystem.create("Key inválida!", 3)
+        end
     end)
-
-    return toggle
 end
 
--- Criar Toggles
-CreateToggle("Auto Farm", "Farm.Active")
-CreateToggle("Fast Attack", "Combat.Fast")
-CreateToggle("Auto Skills", "Combat.Skills")
-CreateToggle("Auto Fruits", "Misc.Fruits")
-
--- Botão de Fechar
-local CloseButton = Create("TextButton", {
-    Size = UDim2.new(0, 20, 0, 20),
-    Position = UDim2.new(1, -25, 0, 2),
-    BackgroundColor3 = Color3.fromRGB(255, 50, 50),
-    Text = "X",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    Font = Enum.Font.GothamBold,
-    Parent = MainFrame
-})
-
-Create("UICorner", {
-    CornerRadius = UDim.new(0, 4),
-    Parent = CloseButton
-})
-
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-    FarmSystem.stop()
-end)
-
--- Notificações
-local function CreateNotification(text, color)
-    local notif = Create("Frame", {
-        Size = UDim2.new(0, 200, 0, 40),
-        Position = UDim2.new(0.5, -100, 0.8, 0),
-        BackgroundColor3 = color or Color3.fromRGB(35, 35, 45),
-        Parent = ScreenGui
-    })
-
-    Create("UICorner", {
-        CornerRadius = UDim.new(0, 6),
-        Parent = notif
-    })
-
-    local label = Create("TextLabel", {
-        Size = UDim2.new(1, -10, 1, 0),
-        Position = UDim2.new(0, 5, 0, 0),
-        BackgroundTransparency = 1,
-        Text = text,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        Font = Enum.Font.GothamSemibold,
-        Parent = notif
-    })
-
-    game:GetService("TweenService"):Create(notif, 
-        TweenInfo.new(0.5), 
-        {Position = UDim2.new(0.5, -100, 0.9, 0)}
-    ):Play()
-
-    wait(2)
-
-    game:GetService("TweenService"):Create(notif,
-        TweenInfo.new(0.5),
-        {Position = UDim2.new(0.5, -100, 1, 0)}
-    ):Play()
-
-    wait(0.5)
-    notif:Destroy()
-end
-
--- Notificação Inicial
-CreateNotification("Zeus Hub V2 carregado com sucesso!", Color3.fromRGB(0, 255, 125))
-
--- Anti AFK
-Player.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
+Initialize()
