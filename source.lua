@@ -1,10 +1,16 @@
+-- Serviços
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
 local Player = Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 
--- Configurações Funcionais
+-- Remover GUI anterior se existir
+if game.CoreGui:FindFirstChild("TheusHUB") then
+    game.CoreGui:FindFirstChild("TheusHUB"):Destroy()
+end
+
+-- Configurações
 getgenv().Settings = {
     AutoFarm = false,
     FastAttack = false,
@@ -27,17 +33,9 @@ local function Teleport(pos)
     end
 end
 
-local function BringMob(mob, target)
-    if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
-        mob.HumanoidRootPart.CFrame = target
-        mob.HumanoidRootPart.CanCollide = false
-        mob.HumanoidRootPart.Size = Vector3.new(5, 5, 5)
-    end
-end
-
 -- Sistema de Fast Attack
-local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
-local CameraShaker = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.CameraShaker)
+local CombatFramework = require(Player.PlayerScripts.CombatFramework)
+local CameraShaker = require(Player.PlayerScripts.CombatFramework.CameraShaker)
 local CombatFrameworkR = getupvalue(CombatFramework.initialize, 1)
 
 local function FastAttack()
@@ -54,7 +52,7 @@ local function FastAttack()
     end
 end
 
--- Sistema de Farm Otimizado
+-- Sistema de Farm
 local function GetNearestMob()
     local closest = math.huge
     local target = nil
@@ -79,28 +77,7 @@ local function AutoFarm()
             pcall(function()
                 local mob = GetNearestMob()
                 if mob then
-                    if Settings.AutoQuest then
-                        -- Implementação de Auto Quest aqui
-                        local questInfo = {
-                            ["Bandit"] = {Quest = "BanditQuest1", Level = 1},
-                            ["Monkey"] = {Quest = "MonkeyQuest", Level = 10},
-                            -- Adicione mais quests conforme necessário
-                        }
-                        
-                        if not Player.PlayerGui.Main.Quest.Visible then
-                            local quest = questInfo[Settings.SelectedMob]
-                            if quest then
-                                ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", quest.Quest, quest.Level)
-                            end
-                        end
-                    end
-                    
                     Teleport(mob.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0))
-                    
-                    if Settings.BringMob then
-                        BringMob(mob, Character.HumanoidRootPart.CFrame * CFrame.new(0, -7, 0))
-                    end
-                    
                     FastAttack()
                 end
             end)
@@ -118,27 +95,19 @@ local function AutoFruit()
                     if fruit.Name:find("Fruit") and fruit:FindFirstChild("Handle") then
                         Teleport(fruit.Handle.CFrame)
                         wait(1)
-                        if Player.Character:FindFirstChild("Humanoid") then
-                            Player.Character.Humanoid:ChangeState(15)
-                        end
-                    end
-                end
-                
-                -- Auto Store Fruits
-                for _, tool in pairs(Player.Backpack:GetChildren()) do
-                    if tool.Name:find("Fruit") then
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", tool.Name)
-                        wait(0.5)
                     end
                 end
             end)
             wait(1)
         end
     end)
-end-- Interface Funcional
-local TheusHub = Instance.new("ScreenGui")
-TheusHub.Name = "TheusHub"
-TheusHub.Parent = game.CoreGui
+end
+
+-- GUI Principal
+local TheusHUB = Instance.new("ScreenGui")
+TheusHUB.Name = "TheusHUB"
+TheusHUB.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+TheusHUB.Parent = game.CoreGui
 
 -- Frame Principal
 local Main = Instance.new("Frame")
@@ -149,16 +118,26 @@ Main.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
-Main.Parent = TheusHub
+Main.Parent = TheusHUB
 
--- Botão de Minimizar
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+Title.BorderSizePixel = 0
+Title.Text = "THEUS HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 20
+Title.Font = Enum.Font.GothamBold
+Title.Parent = Main-- Botão de Minimizar
 local MinButton = Instance.new("TextButton")
 MinButton.Size = UDim2.new(0, 30, 0, 30)
-MinButton.Position = UDim2.new(1, -35, 0, 5)
+MinButton.Position = UDim2.new(1, -35, 0, 0)
 MinButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 MinButton.Text = "-"
 MinButton.TextSize = 20
 MinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinButton.BorderSizePixel = 0
 MinButton.Parent = Main
 
 -- Botão Minimizado
@@ -170,7 +149,7 @@ MinimizedButton.Text = "T"
 MinimizedButton.TextSize = 20
 MinimizedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinimizedButton.Visible = false
-MinimizedButton.Parent = TheusHub
+MinimizedButton.Parent = TheusHUB
 
 -- Sistema de Minimização
 MinButton.MouseButton1Click:Connect(function()
@@ -185,8 +164,9 @@ end)
 
 -- Container de Opções
 local OptionsContainer = Instance.new("ScrollingFrame")
+OptionsContainer.Name = "OptionsContainer"
 OptionsContainer.Size = UDim2.new(1, -20, 1, -40)
-OptionsContainer.Position = UDim2.new(0, 10, 0, 40)
+OptionsContainer.Position = UDim2.new(0, 10, 0, 35)
 OptionsContainer.BackgroundTransparency = 1
 OptionsContainer.ScrollBarThickness = 2
 OptionsContainer.Parent = Main
@@ -209,6 +189,7 @@ local function CreateToggle(text, setting)
     Button.Position = UDim2.new(0, 10, 0.5, -10)
     Button.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     Button.Text = ""
+    Button.BorderSizePixel = 0
     Button.Parent = Toggle
 
     local Label = Instance.new("TextLabel")
@@ -219,42 +200,34 @@ local function CreateToggle(text, setting)
     Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Font = Enum.Font.Gotham
+    Label.TextSize = 14
     Label.Parent = Toggle
 
     Button.MouseButton1Click:Connect(function()
         Settings[setting] = not Settings[setting]
         Button.BackgroundColor3 = Settings[setting] and Color3.fromRGB(0, 255, 125) or Color3.fromRGB(255, 50, 50)
         
-        -- Ativar funções correspondentes
-        if setting == "AutoFarm" then
-            if Settings.AutoFarm then AutoFarm() end
-        elseif setting == "AutoFruit" then
-            if Settings.AutoFruit then AutoFruit() end
-        elseif setting == "KillAura" then
-            if Settings.KillAura then
-                spawn(function()
-                    while Settings.KillAura do
-                        pcall(function()
-                            for _, mob in pairs(workspace.Enemies:GetChildren()) do
-                                if mob:FindFirstChild("HumanoidRootPart") and 
-                                   (mob.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude <= 50 then
-                                    FastAttack()
-                                end
-                            end
-                        end)
-                        wait()
+        if setting == "AutoFarm" and Settings[setting] then
+            AutoFarm()
+        elseif setting == "AutoFruit" and Settings[setting] then
+            AutoFruit()
+        elseif setting == "KillAura" and Settings[setting] then
+            spawn(function()
+                while Settings.KillAura do
+                    local mob = GetNearestMob()
+                    if mob then
+                        FastAttack()
                     end
-                end)
-            end
-        elseif setting == "AutoStats" then
-            if Settings.AutoStats then
-                spawn(function()
-                    while Settings.AutoStats do
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", Settings.SelectedStat, 1)
-                        wait(0.1)
-                    end
-                end)
-            end
+                    wait()
+                end
+            end)
+        elseif setting == "AutoStats" and Settings[setting] then
+            spawn(function()
+                while Settings.AutoStats do
+                    ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", Settings.SelectedStat, 1)
+                    wait(0.1)
+                end
+            end)
         end
     end)
 end
@@ -264,8 +237,10 @@ local function CreateSection(text)
     local Section = Instance.new("TextLabel")
     Section.Size = UDim2.new(1, 0, 0, 30)
     Section.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    Section.BorderSizePixel = 0
     Section.Text = text
     Section.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Section.TextSize = 16
     Section.Font = Enum.Font.GothamBold
     Section.Parent = OptionsContainer
 end
@@ -277,9 +252,10 @@ local function CreateMobDropdown()
     Dropdown.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     Dropdown.Text = "Selected: " .. Settings.SelectedMob
     Dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Dropdown.BorderSizePixel = 0
     Dropdown.Parent = OptionsContainer
 
-    local Mobs = {"Nearest", "Bandit", "Monkey", "Gorilla"} -- Adicione mais mobs conforme necessário
+    local Mobs = {"Nearest", "Bandit", "Monkey", "Gorilla", "Marine", "Chief Petty Officer"}
     
     Dropdown.MouseButton1Click:Connect(function()
         local current = table.find(Mobs, Settings.SelectedMob)
@@ -319,15 +295,13 @@ end)
 OptionsContainer.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
 
 -- Notificação de Inicialização
-local function CreateNotification(text)
-    local Notification = Instance.new("TextLabel")
-    Notification.Size = UDim2.new(0, 200, 0, 40)
-    Notification.Position = UDim2.new(0.5, -100, 0.8, 0)
-    Notification.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Notification.Text = text
-    Notification.Parent = TheusHub
-    game:GetService("Debris"):AddItem(Notification, 2)
-end
-
-CreateNotification("THEUS HUB Loaded!")
+local Notification = Instance.new("TextLabel")
+Notification.Size = UDim2.new(0, 200, 0, 40)
+Notification.Position = UDim2.new(0.5, -100, 0.8, 0)
+Notification.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+Notification.Text = "THEUS HUB Loaded!"
+Notification.TextSize = 16
+Notification.Font = Enum.Font.GothamBold
+Notification.Parent = TheusHUB
+game:GetService("Debris"):AddItem(Notification, 2)
