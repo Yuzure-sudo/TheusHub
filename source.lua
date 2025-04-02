@@ -367,35 +367,160 @@ local function createESPObject(object, settings)
 end
 
 -- Sistema de Auto Quest
-local function getQuestLevel()
+local function autoQuest()
+    while Settings.Farming.AutoQuest do
+        local questInfo = getQuestLevel()
+        if questInfo then
+            -- Verificar se já tem uma quest ativa
+            if not Player.PlayerGui.Main.Quest.Visible then
+                -- Teleportar para o NPC
+                local questNPC = workspace.NPCs:FindFirstChild(questInfo.npc)
+                if questNPC and questNPC:FindFirstChild("HumanoidRootPart") then
+                    -- Animação suave de teleporte
+                    local targetCFrame = questNPC.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                    local startPos = Player.Character.HumanoidRootPart.Position
+                    local distance = (targetCFrame.Position - startPos).Magnitude
+                    local tweenTime = distance/1000 -- Velocidade do teleporte
+                    
+                    local tween = TweenService:Create(
+                        Player.Character.HumanoidRootPart,
+                        TweenInfo.new(tweenTime, Enum.EasingStyle.Linear),
+                        {CFrame = targetCFrame}
+                    )
+                    tween:Play()
+                    tween.Completed:Wait()
+                    
+                    -- Pegar a quest
+                    wait(0.5)
+                    local args = {
+                        [1] = "StartQuest",
+                        [2] = questInfo.quest,
+                        [3] = questInfo.level
+                    }
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+                    wait(0.5)
+                    
+                    -- Notificação
+                    createNotification("Iniciando Quest: " .. questInfo.quest, "success")
+                end
+            end
+            
+            -- Pegar informações do mob da quest
+            local questData = Player.PlayerGui.Main.Quest
+            if questData.Visible then
+                local mobName = questData.Container.QuestTitle.Title.Text:gsub("Kill ", ""):gsub(" %(%d+/%d+%)", "")
+                local mobCount = questData.Container.QuestTitle.Title.Text:match("%((%d+)/(%d+)%)")
+                
+                if mobCount then
+                    local current, total = mobCount:match("(%d+)/(%d+)")
+                    if tonumber(current) < tonumber(total) then
+                        -- Procurar e matar mobs
+                        for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                            if mob.Name == mobName and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                                repeat
+                                    -- Teleportar para o mob
+                                    local mobCFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, Settings.Combat.FarmHeight, 0)
+                                    Player.Character.HumanoidRootPart.CFrame = mobCFrame
+                                    
+                                    -- Ativar Fast Attack se disponível
+                                    if Settings.Combat.FastAttack then
+                                        ultraFastAttack()
+                                    end
+                                    
+                                    -- Expandir Hitbox se ativado
+                                    if Settings.Combat.HitboxExpander then
+                                        expandHitbox(mob)
+                                    end
+                                    
+                                    -- Auto Skill se ativado
+                                    if Settings.Combat.AutoSkill then
+                                        useSkills()
+                                    end
+                                    
+                                    wait()
+                                until not mob:FindFirstChild("Humanoid") or 
+                                      not mob:FindFirstChild("HumanoidRootPart") or 
+                                      mob.Humanoid.Health <= 0 or 
+                                      not Settings.Farming.AutoQuest or
+                                      not questData.Visible
+                            end
+                        end
+                    else
+                        -- Quest completa, pegar próxima
+                        local args = {
+                            [1] = "AbandonQuest"
+                        }
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+                    end
+                end
+            end
+        end
+        wait()
+    end
+end
+
+-- Função auxiliar para usar skills automaticamente
+local function useSkills()
+    local skills = {"Z", "X", "C", "V", "F"}
+    for _, skill in pairs(skills) do
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, skill, false, game)
+        wait(0.1)
+        game:GetService("VirtualInputManager"):SendKeyEvent(false, skill, false, game)
+    end
+end
+
+-- Função para verificar se está no mar correto
+local function checkSea()
     local playerLevel = Player.Level.Value
-    local quests = {
-        {level = 1, npc = "Quest1"},
-        {level = 10, npc = "Quest2"},
-        {level = 20, npc = "Quest3"},
-        -- Adicione mais quests conforme necessário
-    }
+    local currentSea = game.PlaceId
     
-    for i = #quests, 1, -1 do
-        if playerLevel >= quests[i].level then
-            return quests[i].npc
+    if playerLevel >= 700 and currentSea == 2753915549 then -- First Sea
+        createNotification("Nível suficiente para Second Sea! Mudando...", "success")
+        local args = {
+            [1] = "TravelDressrosa" -- Second Sea
+        }
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+    elseif playerLevel >= 1500 and currentSea == 4442272183 then -- Second Sea
+        createNotification("Nível suficiente para Third Sea! Mudando...", "success")
+        local args = {
+            [1] = "TravelZou" -- Third Sea
+        }
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+    end
+end
+
+-- Função para coletar drops próximos
+local function collectDrops()
+    for _, drop in pairs(workspace.Dropped:GetChildren()) do
+        if drop:IsA("Tool") or drop:IsA("Model") then
+            local distance = (drop.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+            if distance < 50 then
+                firetouchinterest(Player.Character.HumanoidRootPart, drop, 0)
+                wait()
+                firetouchinterest(Player.Character.HumanoidRootPart, drop, 1)
+            end
         end
     end
 end
 
-local function autoQuest()
-    while Settings.Farming.AutoQuest do
-        local questNPC = getQuestLevel()
-        if questNPC then
-            local npc = workspace.QuestNPCs:FindFirstChild(questNPC)
-            if npc then
-                Player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame
-                wait(0.5)
-                fireproximityprompt(npc.ProximityPrompt)
-            end
+-- Melhorar a função principal do AutoQuest
+local function enhancedAutoQuest()
+    -- Verificar mar atual
+    checkSea()
+    
+    -- Iniciar loop principal
+    spawn(function()
+        while Settings.Farming.AutoQuest do
+            -- Coletar drops automaticamente
+            collectDrops()
+            
+            -- Executar AutoQuest normal
+            autoQuest()
+            
+            -- Pequena pausa para não sobrecarregar
+            wait(0.1)
         end
-        wait(1)
-    end
+    end)
 end
 
 -- Fruit Sniper
