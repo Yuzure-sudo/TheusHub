@@ -13,23 +13,148 @@ local Settings = {
     AutoQuest = false,
     ESP = {
         Players = false,
-        Fruits = false
+        Mobs = false
     },
     ChestFarm = false,
-    AttackSpeed = 0.1,
+    AttackSpeed = 0.01, -- Velocidade de ataque aumentada
     HoverHeight = 20
 }
 
--- Coordenadas das Ilhas
-local IslandLocations = {
-    ["Pirates Starter Island"] = Vector3.new(1071.2832, 16.3085, 1426.9067),
-    ["Marine Starter Island"] = Vector3.new(-2573.3374, 6.8556, 2046.4116),
-    ["Middle Town"] = Vector3.new(-655.824, 7.8522, 1436.7795),
-    ["Jungle"] = Vector3.new(-1249.7722, 11.8522, 341.8347),
-    ["Pirate Village"] = Vector3.new(-1122.3716, 4.7520, 3855.1777),
-    ["Desert"] = Vector3.new(894.4332, 6.8557, 4390.8501),
-    ["Frozen Village"] = Vector3.new(1389.7837, 87.3678, -1298.1067)
-}
+-- Tela de Login
+local function createLoginScreen()
+    local LoginGui = Instance.new("ScreenGui")
+    LoginGui.Name = "TheusHubLogin"
+    LoginGui.Parent = game.CoreGui
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 300, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = LoginGui
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 15)
+    UICorner.Parent = MainFrame
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 50)
+    Title.Position = UDim2.new(0, 0, 0.1, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "THEUS HUB"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 30
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = MainFrame
+
+    local KeyInput = Instance.new("TextBox")
+    KeyInput.Size = UDim2.new(0.8, 0, 0, 40)
+    KeyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
+    KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    KeyInput.Text = ""
+    KeyInput.PlaceholderText = "Enter Key..."
+    KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeyInput.Font = Enum.Font.Gotham
+    KeyInput.TextSize = 18
+    KeyInput.Parent = MainFrame
+
+    local UICorner2 = Instance.new("UICorner")
+    UICorner2.CornerRadius = UDim.new(0, 8)
+    UICorner2.Parent = KeyInput
+
+    local LoginButton = Instance.new("TextButton")
+    LoginButton.Size = UDim2.new(0.8, 0, 0, 40)
+    LoginButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+    LoginButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    LoginButton.Text = "Login"
+    LoginButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LoginButton.Font = Enum.Font.GothamBold
+    LoginButton.TextSize = 18
+    LoginButton.Parent = MainFrame
+
+    local UICorner3 = Instance.new("UICorner")
+    UICorner3.CornerRadius = UDim.new(0, 8)
+    UICorner3.Parent = LoginButton
+
+    -- Animação de carregamento
+    local function showLoadingScreen()
+        LoginGui:Destroy()
+        
+        local LoadingGui = Instance.new("ScreenGui")
+        LoadingGui.Name = "TheusHubLoading"
+        LoadingGui.Parent = game.CoreGui
+
+        local LoadingFrame = Instance.new("Frame")
+        LoadingFrame.Size = UDim2.new(0, 300, 0, 150)
+        LoadingFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+        LoadingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        LoadingFrame.BorderSizePixel = 0
+        LoadingFrame.Parent = LoadingGui
+
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 15)
+        UICorner.Parent = LoadingFrame
+
+        local LoadingText = Instance.new("TextLabel")
+        LoadingText.Size = UDim2.new(1, 0, 0, 30)
+        LoadingText.Position = UDim2.new(0, 0, 0.2, 0)
+        LoadingText.BackgroundTransparency = 1
+        LoadingText.Text = "Loading..."
+        LoadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        LoadingText.TextSize = 24
+        LoadingText.Font = Enum.Font.GothamBold
+        LoadingText.Parent = LoadingFrame
+
+        local LoadingBar = Instance.new("Frame")
+        LoadingBar.Size = UDim2.new(0.8, 0, 0, 10)
+        LoadingBar.Position = UDim2.new(0.1, 0, 0.6, 0)
+        LoadingBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        LoadingBar.BorderSizePixel = 0
+        LoadingBar.Parent = LoadingFrame
+
+        local UICorner2 = Instance.new("UICorner")
+        UICorner2.CornerRadius = UDim.new(1, 0)
+        UICorner2.Parent = LoadingBar
+
+        local Progress = Instance.new("Frame")
+        Progress.Size = UDim2.new(0, 0, 1, 0)
+        Progress.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        Progress.BorderSizePixel = 0
+        Progress.Parent = LoadingBar
+
+        local UICorner3 = Instance.new("UICorner")
+        UICorner3.CornerRadius = UDim.new(1, 0)
+        UICorner3.Parent = Progress
+
+        -- Animação da barra de progresso
+        local function animateLoading()
+            local tween = TweenService:Create(Progress, 
+                TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Size = UDim2.new(1, 0, 1, 0)}
+            )
+            tween:Play()
+            wait(2.5)
+            LoadingGui:Destroy()
+            createMainGUI()
+        end
+
+        animateLoading()
+    end
+
+    LoginButton.MouseButton1Click:Connect(function()
+        if KeyInput.Text == "THEUSHUB" then -- Chave de exemplo
+            showLoadingScreen()
+        else
+            KeyInput.Text = ""
+            KeyInput.PlaceholderText = "Invalid Key!"
+            wait(1)
+            KeyInput.PlaceholderText = "Enter Key..."
+        end
+    end)
+
+    return LoginGui
+end
 
 -- Funções de Utilidade
 local function getPlayerLevel()
@@ -52,259 +177,229 @@ local function getNearestMob()
     return nearestMob
 end
 
--- Sistema de Auto Farm
+-- Sistema de Auto Farm Melhorado
 local function autoFarm()
     while Settings.AutoFarm do
         local mob = getNearestMob()
         if mob then
             local targetPosition = mob.HumanoidRootPart.Position + Vector3.new(0, Settings.HoverHeight, 0)
-            local humanoidRootPart = Player.Character.HumanoidRootPart
+            Player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
             
-            -- Teleport above mob
-            humanoidRootPart.CFrame = CFrame.new(targetPosition)
-            
-            -- Auto attack
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton1(Vector2.new(), workspace.CurrentCamera.CFrame)
+            -- Auto attack rápido
+            for i = 1, 5 do
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton1(Vector2.new(), workspace.CurrentCamera.CFrame)
+                game:GetService("ReplicatedStorage").Remotes.Combat:FireServer()
+                wait(Settings.AttackSpeed)
+            end
         end
         wait(Settings.AttackSpeed)
     end
 end
 
--- Sistema de ESP
-local function createESP(object, espType)
-    local esp = Instance.new("BillboardGui")
-    esp.Name = "ESP"
-    esp.Size = UDim2.new(0, 200, 0, 50)
-    esp.StudsOffset = Vector3.new(0, 2, 0)
-    esp.AlwaysOnTop = true
-    esp.Parent = object
+-- Sistema ESP
+local function createESP(object)
+    local BillboardGui = Instance.new("BillboardGui")
+    BillboardGui.Size = UDim2.new(0, 100, 0, 50)
+    BillboardGui.AlwaysOnTop = true
+    BillboardGui.StudsOffset = Vector3.new(0, 3, 0)
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundTransparency = 0.8
-    frame.BorderSizePixel = 0
-    frame.Parent = esp
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1, 0, 1, 0)
+    Frame.BackgroundTransparency = 1
+    Frame.Parent = BillboardGui
 
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = object.Name
-    nameLabel.TextColor3 = (espType == "player" and Color3.new(1, 0, 0)) or 
-                          (espType == "fruit" and Color3.new(0, 1, 0)) or 
-                          Color3.new(1, 1, 1)
-    nameLabel.TextSize = 14
-    nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.Parent = frame
-end
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = object.Name
+    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NameLabel.TextScaled = true
+    NameLabel.Font = Enum.Font.GothamBold
+    NameLabel.Parent = Frame
 
--- Interface Principal
-local function createMainGUI()
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "TheusHub"
-    ScreenGui.Parent = game.CoreGui
-    
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 300, 0, 400)
-    MainFrame.Position = UDim2.new(0.8, 0, 0.5, -200)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Parent = ScreenGui
-    
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = MainFrame
-    
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 40)
-    Title.BackgroundTransparency = 1
-    Title.Text = "Theus Hub"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 24
-    Title.Font = Enum.Font.GothamBold
-    Title.Parent = MainFrame
-    
-    -- Botões
-    local function createButton(text, position, callback)
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(0.8, 0, 0, 30)
-        button.Position = position
-        button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-        button.Text = text
-        button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        button.Font = Enum.Font.Gotham
-        button.Parent = MainFrame
-        
-        local UICorner = Instance.new("UICorner")
-        UICorner.CornerRadius = UDim.new(0, 6)
-        UICorner.Parent = button
-        
-        button.MouseButton1Click:Connect(callback)
-        return button
-    end
-    
-    -- Auto Farm Button
-    createButton("Auto Farm", UDim2.new(0.1, 0, 0.2, 0), function()
-        Settings.AutoFarm = not Settings.AutoFarm
-        if Settings.AutoFarm then
-            autoFarm()
+    local DistanceLabel = Instance.new("TextLabel")
+    DistanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    DistanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    DistanceLabel.BackgroundTransparency = 1
+    DistanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DistanceLabel.TextScaled = true
+    DistanceLabel.Font = Enum.Font.Gotham
+    DistanceLabel.Parent = Frame
+
+    RunService.RenderStepped:Connect(function()
+        if object and object:FindFirstChild("HumanoidRootPart") and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (object.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
+            DistanceLabel.Text = math.floor(distance) .. " studs"
         end
     end)
-    
-    -- ESP Button
-    createButton("ESP Players", UDim2.new(0.1, 0, 0.3, 0), function()
-        Settings.ESP.Players = not Settings.ESP.Players
-    end)
-    
-    -- Chest Farm Button
-    createButton("Chest Farm", UDim2.new(0.1, 0, 0.4, 0), function()
-        Settings.ChestFarm = not Settings.ChestFarm
-    end)
+
+    return BillboardGui
 end
 
--- Anti AFK
-Player.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)-- Sistema de Chest Farm
+-- Sistema de Farm de Baús
 local function chestFarm()
+    local function collectChest(chest)
+        if chest and chest:FindFirstChild("Interaction") then
+            Player.Character.HumanoidRootPart.CFrame = chest.CFrame
+            wait(0.5)
+            fireproximityprompt(chest.Interaction)
+        end
+    end
+
     while Settings.ChestFarm do
-        for _, chest in pairs(workspace:GetChildren()) do
-            if chest.Name:find("Chest") and chest:FindFirstChild("Hitbox") then
-                local targetPosition = chest.Hitbox.Position + Vector3.new(0, 2, 0)
-                Player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
-                wait(0.5)
-                
-                -- Tentar coletar o baú
-                local args = {
-                    [1] = "CollectChest",
-                    [2] = chest
-                }
-                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+        for _, chest in pairs(workspace:GetDescendants()) do
+            if chest:IsA("Model") and chest.Name:lower():find("chest") then
+                collectChest(chest)
             end
         end
         wait(1)
     end
 end
 
--- Sistema de Teleporte
-local function createTeleportMenu()
-    local TeleportFrame = Instance.new("Frame")
-    TeleportFrame.Name = "TeleportMenu"
-    TeleportFrame.Size = UDim2.new(0, 200, 0, 300)
-    TeleportFrame.Position = UDim2.new(0, 0, 0.5, -150)
-    TeleportFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    TeleportFrame.Visible = false
-    TeleportFrame.Parent = game.CoreGui:FindFirstChild("TheusHub").MainFrame
+-- Interface Principal
+local function createMainGUI()
+    local MainGui = Instance.new("ScreenGui")
+    MainGui.Name = "TheusHubMain"
+    MainGui.Parent = game.CoreGui
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    MainFrame.Parent = MainGui
 
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = TeleportFrame
+    UICorner.CornerRadius = UDim.new(0, 15)
+    UICorner.Parent = MainFrame
 
+    -- Título
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.Size = UDim2.new(1, 0, 0, 40)
     Title.BackgroundTransparency = 1
-    Title.Text = "Teleport Menu"
+    Title.Text = "THEUS HUB"
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 24
     Title.Font = Enum.Font.GothamBold
-    Title.Parent = TeleportFrame
+    Title.Parent = MainFrame
 
-    local ScrollingFrame = Instance.new("ScrollingFrame")
-    ScrollingFrame.Size = UDim2.new(1, -20, 1, -40)
-    ScrollingFrame.Position = UDim2.new(0, 10, 0, 35)
-    ScrollingFrame.BackgroundTransparency = 1
-    ScrollingFrame.ScrollBarThickness = 4
-    ScrollingFrame.Parent = TeleportFrame
+    -- Scroll Frame para Botões
+    local ScrollFrame = Instance.new("ScrollingFrame")
+    ScrollFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
+    ScrollFrame.Position = UDim2.new(0.05, 0, 0.12, 0)
+    ScrollFrame.BackgroundTransparency = 1
+    ScrollFrame.ScrollBarThickness = 4
+    ScrollFrame.Parent = MainFrame
 
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Padding = UDim.new(0, 5)
-    UIListLayout.Parent = ScrollingFrame
-
-    for islandName, position in pairs(IslandLocations) do
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, -10, 0, 30)
-        button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-        button.Text = islandName
-        button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        button.Font = Enum.Font.Gotham
-        button.Parent = ScrollingFrame
+    -- Função para criar botões
+    local function createButton(text, position, callback)
+        local Button = Instance.new("TextButton")
+        Button.Size = UDim2.new(0.9, 0, 0, 40)
+        Button.Position = position
+        Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        Button.Text = text
+        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Button.TextSize = 18
+        Button.Font = Enum.Font.Gotham
+        Button.Parent = ScrollFrame
 
         local UICorner = Instance.new("UICorner")
-        UICorner.CornerRadius = UDim.new(0, 6)
-        UICorner.Parent = button
+        UICorner.CornerRadius = UDim.new(0, 8)
+        UICorner.Parent = Button
 
-        button.MouseButton1Click:Connect(function()
-            Player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
-        end)
+        Button.MouseButton1Click:Connect(callback)
+        return Button
     end
 
-    return TeleportFrame
+    -- Botões
+    local buttonY = 0
+    local buttonSpacing = 50
+
+    -- Auto Farm
+    createButton("Auto Farm: OFF", UDim2.new(0.05, 0, 0, buttonY), function()
+        Settings.AutoFarm = not Settings.AutoFarm
+        if Settings.AutoFarm then
+            spawn(autoFarm)
+        end
+    end)
+    buttonY = buttonY + buttonSpacing
+
+    -- ESP
+    createButton("ESP Mobs: OFF", UDim2.new(0.05, 0, 0, buttonY), function()
+        Settings.ESP.Mobs = not Settings.ESP.Mobs
+    end)
+    buttonY = buttonY + buttonSpacing
+
+    -- Chest Farm
+    createButton("Chest Farm: OFF", UDim2.new(0.05, 0, 0, buttonY), function()
+        Settings.ChestFarm = not Settings.ChestFarm
+        if Settings.ChestFarm then
+            spawn(chestFarm)
+        end
+    end)
+    buttonY = buttonY + buttonSpacing
+
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, buttonY)
 end
 
--- Update ESP
-local function updateESP()
-    if Settings.ESP.Players then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Player and player.Character and not player.Character:FindFirstChild("ESP") then
-                createESP(player.Character, "player")
+-- Inicialização
+createLoginScreen()-- Sistema de Atualização e Monitoramento
+RunService.Heartbeat:Connect(function()
+    if Settings.ESP.Mobs then
+        for _, mob in pairs(workspace.Enemies:GetChildren()) do
+            if not mob:FindFirstChild("ESP") and mob:FindFirstChild("HumanoidRootPart") then
+                local esp = createESP(mob)
+                esp.Parent = mob
+                esp.Name = "ESP"
+                esp.Adornee = mob.HumanoidRootPart
             end
         end
-    end
-
-    if Settings.ESP.Fruits then
-        for _, fruit in pairs(workspace:GetChildren()) do
-            if fruit.Name:find("Fruit") and not fruit:FindFirstChild("ESP") then
-                createESP(fruit, "fruit")
-            end
-        end
-    end
-end
-
--- Monitor de Frutas
-workspace.ChildAdded:Connect(function(child)
-    if child.Name:find("Fruit") and Settings.ESP.Fruits then
-        createESP(child, "fruit")
     end
 end)
 
--- Inicialização
-local function init()
-    createMainGUI()
-    local teleportMenu = createTeleportMenu()
+-- Anti AFK
+Player.Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+-- Sistema de Proteção
+local function setupProtection()
+    local mt = getrawmetatable(game)
+    local oldNamecall = mt.__namecall
+    setreadonly(mt, false)
     
-    -- Botão de Teleporte
-    local teleportButton = Instance.new("TextButton")
-    teleportButton.Size = UDim2.new(0.8, 0, 0, 30)
-    teleportButton.Position = UDim2.new(0.1, 0, 0.5, 0)
-    teleportButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    teleportButton.Text = "Teleport Menu"
-    teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    teleportButton.Font = Enum.Font.Gotham
-    teleportButton.Parent = game.CoreGui:FindFirstChild("TheusHub").MainFrame
-
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 6)
-    UICorner.Parent = teleportButton
-
-    teleportButton.MouseButton1Click:Connect(function()
-        teleportMenu.Visible = not teleportMenu.Visible
-    end)
-
-    -- Update Loop
-    RunService.RenderStepped:Connect(function()
-        if Settings.ESP.Players or Settings.ESP.Fruits then
-            updateESP()
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+        
+        if method == "FireServer" and self.Name == "ReportPlayer" then
+            return
         end
+        
+        return oldNamecall(self, ...)
     end)
+    
+    setreadonly(mt, true)
 end
 
--- Iniciar o script
-init()
+setupProtection()
 
--- Retornar configurações para acesso externo
-return {
+-- Otimizações
+settings().Physics.PhysicsEnvironmentalThrottle = 1
+settings().Rendering.QualityLevel = 1
+
+-- Inicialização de Variáveis Globais
+_G.TheusHub = {
     Settings = Settings,
-    IslandLocations = IslandLocations
+    Functions = {
+        AutoFarm = autoFarm,
+        ChestFarm = chestFarm,
+        CreateESP = createESP
+    }
 }
