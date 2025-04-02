@@ -24,7 +24,91 @@ local Settings = {
     NoClip = false
 }
 
--- Tela de Login (mantida do script anterior)
+-- Funções de Utilidade
+local function getNearestMob()
+    local nearestMob = nil
+    local shortestDistance = math.huge
+    
+    for _, mob in pairs(workspace.Enemies:GetChildren()) do
+        if mob:FindFirstChild("Humanoid") and 
+           mob:FindFirstChild("HumanoidRootPart") and 
+           mob.Humanoid.Health > 0 then
+            local distance = (mob.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                nearestMob = mob
+            end
+        end
+    end
+    return nearestMob
+end
+
+-- Auto Farm
+local function autoFarm()
+    while Settings.AutoFarm do
+        local mob = getNearestMob()
+        if mob and mob:FindFirstChild("HumanoidRootPart") and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Teleporte suave
+            local targetPosition = mob.HumanoidRootPart.Position + Vector3.new(0, Settings.HoverHeight, 0)
+            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Linear)
+            local tween = TweenService:Create(Player.Character.HumanoidRootPart, tweenInfo, {
+                CFrame = CFrame.new(targetPosition, mob.HumanoidRootPart.Position)
+            })
+            tween:Play()
+            
+            -- Sistema de ataque ultra-rápido
+            for i = 1, 10 do
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton1(Vector2.new(), workspace.CurrentCamera.CFrame)
+                game:GetService("ReplicatedStorage").Remotes.Combat:FireServer()
+                wait(Settings.AttackSpeed)
+            end
+        end
+        wait()
+    end
+end
+
+-- Sistema ESP
+local function createESP(object)
+    local BillboardGui = Instance.new("BillboardGui")
+    BillboardGui.Size = UDim2.new(0, 100, 0, 50)
+    BillboardGui.AlwaysOnTop = true
+    BillboardGui.StudsOffset = Vector3.new(0, 3, 0)
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1, 0, 1, 0)
+    Frame.BackgroundTransparency = 1
+    Frame.Parent = BillboardGui
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = object.Name
+    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NameLabel.TextScaled = true
+    NameLabel.Font = Enum.Font.GothamBold
+    NameLabel.Parent = Frame
+
+    local DistanceLabel = Instance.new("TextLabel")
+    DistanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    DistanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    DistanceLabel.BackgroundTransparency = 1
+    DistanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DistanceLabel.TextScaled = true
+    DistanceLabel.Font = Enum.Font.Gotham
+    DistanceLabel.Parent = Frame
+
+    RunService.RenderStepped:Connect(function()
+        if object and object:FindFirstChild("HumanoidRootPart") and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (object.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
+            DistanceLabel.Text = math.floor(distance) .. " studs"
+        end
+    end)
+
+    return BillboardGui
+end
+
+-- Tela de Login
 local function createLoginScreen()
     local LoginGui = Instance.new("ScreenGui")
     LoginGui.Name = "TheusHubLogin"
@@ -137,9 +221,12 @@ local function createLoginScreen()
                 {Size = UDim2.new(1, 0, 1, 0)}
             )
             tween:Play()
-            wait(2.5)
-            LoadingGui:Destroy()
-            createMainGUI()
+            
+            tween.Completed:Connect(function()
+                wait(0.5)
+                LoadingGui:Destroy()
+                createMainGUI()
+            end)
         end
 
         animateLoading()
@@ -155,9 +242,7 @@ local function createLoginScreen()
             KeyInput.PlaceholderText = "Enter Key..."
         end
     end)
-end
-
--- Interface Principal Melhorada
+end-- Interface Principal
 local function createMainGUI()
     local MainGui = Instance.new("ScreenGui")
     MainGui.Name = "TheusHubMain"
@@ -188,6 +273,26 @@ local function createMainGUI()
     UICornerTop.CornerRadius = UDim.new(0, 15)
     UICornerTop.Parent = TopBar
 
+    -- Botão Fechar
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(0.92, 0, 0.1, 0)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 20
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Parent = TopBar
+
+    local UICornerClose = Instance.new("UICorner")
+    UICornerClose.CornerRadius = UDim.new(1, 0)
+    UICornerClose.Parent = CloseButton
+
+    CloseButton.MouseButton1Click:Connect(function()
+        MainGui:Destroy()
+    end)
+
+    -- Título
     local Title = Instance.new("TextLabel")
     Title.Size = UDim2.new(0.7, 0, 1, 0)
     Title.Position = UDim2.new(0.15, 0, 0, 0)
@@ -198,165 +303,119 @@ local function createMainGUI()
     Title.Font = Enum.Font.GothamBold
     Title.Parent = TopBar
 
-    -- Tabs
-    local TabsFrame = Instance.new("Frame")
-    TabsFrame.Size = UDim2.new(0.25, 0, 0.9, 0)
-    TabsFrame.Position = UDim2.new(0.02, 0, 0.1, 0)
-    TabsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    TabsFrame.BorderSizePixel = 0
-    TabsFrame.Parent = MainFrame
-
-    local UICornerTabs = Instance.new("UICorner")
-    UICornerTabs.CornerRadius = UDim.new(0, 10)
-    UICornerTabs.Parent = TabsFrame
-
-    -- Conteúdo
-    local ContentFrame = Instance.new("Frame")
-    ContentFrame.Size = UDim2.new(0.7, 0, 0.9, 0)
-    ContentFrame.Position = UDim2.new(0.28, 0, 0.1, 0)
+    -- Conteúdo Principal
+    local ContentFrame = Instance.new("ScrollingFrame")
+    ContentFrame.Size = UDim2.new(0.95, 0, 0.85, 0)
+    ContentFrame.Position = UDim2.new(0.025, 0, 0.12, 0)
     ContentFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     ContentFrame.BorderSizePixel = 0
+    ContentFrame.ScrollBarThickness = 4
     ContentFrame.Parent = MainFrame
 
     local UICornerContent = Instance.new("UICorner")
     UICornerContent.CornerRadius = UDim.new(0, 10)
     UICornerContent.Parent = ContentFrame
 
-    -- Função para criar tabs
-    local function createTab(name, position)
-        local Tab = Instance.new("TextButton")
-        Tab.Size = UDim2.new(0.9, 0, 0, 35)
-        Tab.Position = position
-        Tab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        Tab.Text = name
-        Tab.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Tab.TextSize = 14
-        Tab.Font = Enum.Font.GothamSemibold
-        Tab.Parent = TabsFrame
-
-        local UICornerTab = Instance.new("UICorner")
-        UICornerTab.CornerRadius = UDim.new(0, 8)
-        UICornerTab.Parent = Tab
-
-        return Tab
-    end
-
-    -- Função para criar botões de função
-    local function createFunctionButton(name, position, parent)
+    -- Função para criar botões
+    local function createToggleButton(text, position)
         local Button = Instance.new("TextButton")
-        Button.Size = UDim2.new(0.9, 0, 0, 35)
+        Button.Size = UDim2.new(0.9, 0, 0, 40)
         Button.Position = position
-        Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-        Button.Text = name
+        Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        Button.Text = text
         Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.TextSize = 14
-        Button.Font = Enum.Font.Gotham
-        Button.Parent = parent
+        Button.TextSize = 16
+        Button.Font = Enum.Font.GothamSemibold
+        Button.Parent = ContentFrame
 
         local UICornerButton = Instance.new("UICorner")
         UICornerButton.CornerRadius = UDim.new(0, 8)
         UICornerButton.Parent = Button
 
-        local ToggleState = Instance.new("Frame")
-        ToggleState.Size = UDim2.new(0, 8, 0, 8)
-        ToggleState.Position = UDim2.new(0.95, -4, 0.5, -4)
-        ToggleState.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        ToggleState.Parent = Button
+        local StatusIndicator = Instance.new("Frame")
+        StatusIndicator.Size = UDim2.new(0, 12, 0, 12)
+        StatusIndicator.Position = UDim2.new(0.95, -15, 0.5, -6)
+        StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+        StatusIndicator.Parent = Button
 
-        local UICornerToggle = Instance.new("UICorner")
-        UICornerToggle.CornerRadius = UDim.new(1, 0)
-        UICornerToggle.Parent = ToggleState
+        local UICornerStatus = Instance.new("UICorner")
+        UICornerStatus.CornerRadius = UDim.new(1, 0)
+        UICornerStatus.Parent = StatusIndicator
 
-        return Button, ToggleState
+        return Button, StatusIndicator
     end
 
-    -- Criando Tabs
-    local tabY = 0.02
-    local tabSpacing = 0.08
+    -- Criando Botões
+    local buttonSpacing = 50
+    local currentY = 10
 
-    local farmingTab = createTab("Farming", UDim2.new(0.05, 0, tabY, 0))
-    tabY = tabY + tabSpacing
-    local combatTab = createTab("Combat", UDim2.new(0.05, 0, tabY, 0))
-    tabY = tabY + tabSpacing
-    local visualsTab = createTab("Visuals", UDim2.new(0.05, 0, tabY, 0))
-    tabY = tabY + tabSpacing
-    local miscTab = createTab("Misc", UDim2.new(0.05, 0, tabY, 0))
-
-    -- Criando páginas de conteúdo
-    local function createContentPage()
-        local Page = Instance.new("ScrollingFrame")
-        Page.Size = UDim2.new(1, 0, 1, 0)
-        Page.BackgroundTransparency = 1
-        Page.BorderSizePixel = 0
-        Page.ScrollBarThickness = 4
-        Page.Visible = false
-        Page.Parent = ContentFrame
-        return Page
-    end
-
-    local farmingPage = createContentPage()
-    local combatPage = createContentPage()
-    local visualsPage = createContentPage()
-    local miscPage = createContentPage()
-
-    -- Função para alternar entre páginas
-    local function showPage(page)
-        farmingPage.Visible = false
-        combatPage.Visible = false
-        visualsPage.Visible = false
-        miscPage.Visible = false
-        page.Visible = true
-    end
-
-    -- Eventos dos tabs
-    farmingTab.MouseButton1Click:Connect(function() showPage(farmingPage) end)
-    combatTab.MouseButton1Click:Connect(function() showPage(combatPage) end)
-    visualsTab.MouseButton1Click:Connect(function() showPage(visualsPage) end)
-    miscTab.MouseButton1Click:Connect(function() showPage(miscPage) end)
-
-    -- Adicionando botões às páginas
-    -- Farming Page
-    local farmY = 0.02
-    local buttonSpacing = 0.08
-
-    local autoFarmButton, autoFarmState = createFunctionButton("Auto Farm", UDim2.new(0.05, 0, farmY, 0), farmingPage)
-    farmY = farmY + buttonSpacing
-    local autoQuestButton, autoQuestState = createFunctionButton("Auto Quest", UDim2.new(0.05, 0, farmY, 0), farmingPage)
-    farmY = farmY + buttonSpacing
-    local chestFarmButton, chestFarmState = createFunctionButton("Chest Farm", UDim2.new(0.05, 0, farmY, 0), farmingPage)
-
-    -- Combat Page
-    local combatY = 0.02
-    local fastAttackButton, fastAttackState = createFunctionButton("Fast Attack", UDim2.new(0.05, 0, combatY, 0), combatPage)
-    combatY = combatY + buttonSpacing
-    local autoSkillButton, autoSkillState = createFunctionButton("Auto Skill", UDim2.new(0.05, 0, combatY, 0), combatPage)
-
-    -- Visuals Page
-    local visualsY = 0.02
-    local espMobsButton, espMobsState = createFunctionButton("ESP Mobs", UDim2.new(0.05, 0, visualsY, 0), visualsPage)
-    visualsY = visualsY + buttonSpacing
-    local espChestButton, espChestState = createFunctionButton("ESP Chests", UDim2.new(0.05, 0, visualsY, 0), visualsPage)
-
-    -- Misc Page
-    local miscY = 0.02
-    local noClipButton, noClipState = createFunctionButton("No Clip", UDim2.new(0.05, 0, miscY, 0), miscPage)
-    miscY = miscY + buttonSpacing
-    local walkSpeedButton, walkSpeedState = createFunctionButton("Walk Speed", UDim2.new(0.05, 0, miscY, 0), miscPage)
-
-    -- Mostrar página inicial
-    showPage(farmingPage)
-
-    -- Funções dos botões
+    -- Auto Farm
+    local autoFarmButton, autoFarmStatus = createToggleButton("Auto Farm", UDim2.new(0.05, 0, 0, currentY))
     autoFarmButton.MouseButton1Click:Connect(function()
         Settings.AutoFarm = not Settings.AutoFarm
-        autoFarmState.BackgroundColor3 = Settings.AutoFarm and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        autoFarmStatus.BackgroundColor3 = Settings.AutoFarm and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
         if Settings.AutoFarm then
-            -- Iniciar Auto Farm
+            spawn(autoFarm)
         end
     end)
+    currentY = currentY + buttonSpacing
 
-    -- Adicione eventos similares para os outros botões...
+    -- Fast Attack
+    local fastAttackButton, fastAttackStatus = createToggleButton("Fast Attack", UDim2.new(0.05, 0, 0, currentY))
+    fastAttackButton.MouseButton1Click:Connect(function()
+        Settings.FastAttack = not Settings.FastAttack
+        fastAttackStatus.BackgroundColor3 = Settings.FastAttack and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    end)
+    currentY = currentY + buttonSpacing
+
+    -- Auto Skill
+    local autoSkillButton, autoSkillStatus = createToggleButton("Auto Skill", UDim2.new(0.05, 0, 0, currentY))
+    autoSkillButton.MouseButton1Click:Connect(function()
+        Settings.AutoSkill = not Settings.AutoSkill
+        autoSkillStatus.BackgroundColor3 = Settings.AutoSkill and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    end)
+    currentY = currentY + buttonSpacing
+
+    -- ESP Mobs
+    local espMobsButton, espMobsStatus = createToggleButton("ESP Mobs", UDim2.new(0.05, 0, 0, currentY))
+    espMobsButton.MouseButton1Click:Connect(function()
+        Settings.ESP.Mobs = not Settings.ESP.Mobs
+        espMobsStatus.BackgroundColor3 = Settings.ESP.Mobs and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    end)
+    currentY = currentY + buttonSpacing
+
+    -- Chest Farm
+    local chestFarmButton, chestFarmStatus = createToggleButton("Chest Farm", UDim2.new(0.05, 0, 0, currentY))
+    chestFarmButton.MouseButton1Click:Connect(function()
+        Settings.ChestFarm = not Settings.ChestFarm
+        chestFarmStatus.BackgroundColor3 = Settings.ChestFarm and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+        if Settings.ChestFarm then
+            spawn(chestFarm)
+        end
+    end)
+    currentY = currentY + buttonSpacing
+
+    -- No Clip
+    local noClipButton, noClipStatus = createToggleButton("No Clip", UDim2.new(0.05, 0, 0, currentY))
+    noClipButton.MouseButton1Click:Connect(function()
+        Settings.NoClip = not Settings.NoClip
+        noClipStatus.BackgroundColor3 = Settings.NoClip and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    end)
+    currentY = currentY + buttonSpacing
+
+    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, currentY + 10)
+end
+
+-- Anti AFK
+local function setupAntiAFK()
+    local VirtualUser = game:GetService("VirtualUser")
+    Player.Idled:Connect(function()
+        VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        wait(1)
+        VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    end)
 end
 
 -- Inicialização
 createLoginScreen()
+setupAntiAFK()
