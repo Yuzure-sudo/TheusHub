@@ -180,4 +180,185 @@ local function CreateLoginUI()
     Title.TextSize = 24
     Title.Font = Enum.Font.GothamBold
     Title.BackgroundTransparency = 1
-    Title.Parent = MainFrame
+    Title.Parent = MainFrame-- Continuação do Sistema de Login
+    local KeyInput = Instance.new("TextBox")
+    KeyInput.Size = UDim2.new(0.8, 0, 0, 35)
+    KeyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
+    KeyInput.PlaceholderText = "Insira sua Key"
+    KeyInput.Text = ""
+    KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    KeyInput.BorderSizePixel = 0
+    KeyInput.Parent = MainFrame
+
+    local LoginButton = Instance.new("TextButton")
+    LoginButton.Size = UDim2.new(0.8, 0, 0, 35)
+    LoginButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+    LoginButton.Text = "Login"
+    LoginButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    LoginButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    LoginButton.BorderSizePixel = 0
+    LoginButton.Parent = MainFrame
+
+    -- Sistema de Farm
+    local FarmSystem = {
+        running = false,
+        
+        getNearestMob = function()
+            local nearest = {distance = math.huge, mob = nil}
+            for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") 
+                and mob.Humanoid.Health > 0 then
+                    local distance = (Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
+                    if distance < nearest.distance then
+                        nearest = {distance = distance, mob = mob}
+                    end
+                end
+            end
+            return nearest.mob
+        end,
+
+        attack = function()
+            game:GetService("VirtualUser"):CaptureController()
+            game:GetService("VirtualUser"):ClickButton1(Vector2.new())
+            
+            if Settings.Combat.Fast then
+                for i = 1, 3 do
+                    game:GetService("ReplicatedStorage").Remotes.Combat:FireServer("ComboHit", "Melee")
+                    task.wait(0.1)
+                end
+            end
+        end,
+
+        useSkills = function()
+            if Settings.Combat.Skills then
+                for _, key in pairs({"Z", "X", "C"}) do
+                    game:GetService("VirtualUser"):CaptureController()
+                    game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                    wait(0.1)
+                    game:GetService("VirtualUser"):Button1Up(Vector2.new(0,0))
+                end
+            end
+        end,
+
+        start = function()
+            if FarmSystem.running then return end
+            FarmSystem.running = true
+            
+            spawn(function()
+                while Settings.Farm.Active and FarmSystem.running do
+                    local mob = FarmSystem.getNearestMob()
+                    if mob then
+                        local targetCFrame = mob.HumanoidRootPart.CFrame * 
+                            CFrame.new(0, Settings.Farm.Height, 0)
+                        
+                        Character.HumanoidRootPart.CFrame = targetCFrame
+                        
+                        FarmSystem.attack()
+                        FarmSystem.useSkills()
+                    end
+                    task.wait()
+                end
+            end)
+        end,
+
+        stop = function()
+            FarmSystem.running = false
+        end
+    }
+
+    -- Sistema de Frutas
+    local FruitSystem = {
+        collectNearbyFruits = function()
+            for _, fruit in pairs(workspace:GetChildren()) do
+                if fruit.Name:find("Fruit") and fruit:FindFirstChild("Handle") then
+                    local distance = (Character.HumanoidRootPart.Position - fruit.Handle.Position).Magnitude
+                    if distance < 50 then
+                        Character.HumanoidRootPart.CFrame = fruit.Handle.CFrame
+                        wait(0.2)
+                    end
+                end
+            end
+        end,
+
+        storeFruit = function()
+            local backpack = Player.Backpack
+            for _, tool in pairs(backpack:GetChildren()) do
+                if tool.Name:find("Fruit") then
+                    Character.Humanoid:EquipTool(tool)
+                    game:GetService("ReplicatedStorage").Remotes.StoreFruit:FireServer()
+                    wait(0.5)
+                end
+            end
+        end
+    }
+
+    -- Anti AFK
+    local antiAFK = game:GetService("VirtualUser")
+    Player.Idled:Connect(function()
+        antiAFK:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        wait(1)
+        antiAFK:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    end)
+
+    -- Sistema de Inicialização
+    LoginButton.MouseButton1Click:Connect(function()
+        if KeyInput.Text == "theusgostoso" then
+            LoginGui:Destroy()
+            CreateMainInterface()
+            
+            -- Iniciar sistemas automáticos
+            spawn(function()
+                while wait(1) do
+                    if Settings.Misc.Fruits then
+                        FruitSystem.collectNearbyFruits()
+                        FruitSystem.storeFruit()
+                    end
+                end
+            end)
+
+            -- Notificação de sucesso
+            local function CreateNotification(text)
+                local Notification = Instance.new("Frame")
+                Notification.Size = UDim2.new(0, 200, 0, 40)
+                Notification.Position = UDim2.new(1, -220, 1, -60)
+                Notification.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+                Notification.BorderSizePixel = 0
+                Notification.Parent = game:GetService("CoreGui").TheusHUB
+                
+                local NotifText = Instance.new("TextLabel")
+                NotifText.Size = UDim2.new(1, 0, 1, 0)
+                NotifText.Text = text
+                NotifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+                NotifText.TextSize = 14
+                NotifText.Font = Enum.Font.Gotham
+                NotifText.Parent = Notification
+                
+                game:GetService("TweenService"):Create(
+                    Notification,
+                    TweenInfo.new(0.5),
+                    {Position = UDim2.new(1, -220, 1, -60)}
+                ):Play()
+                
+                wait(2)
+                
+                game:GetService("TweenService"):Create(
+                    Notification,
+                    TweenInfo.new(0.5),
+                    {Position = UDim2.new(1.5, 0, 1, -60)}
+                ):Play()
+                
+                wait(0.5)
+                Notification:Destroy()
+            end
+            
+            CreateNotification("THEUS HUB carregado com sucesso!")
+        else
+            KeyInput.Text = ""
+            KeyInput.PlaceholderText = "Key Inválida!"
+        end
+    end)
+end
+
+-- Iniciar o script
+CreateLoginUI()
