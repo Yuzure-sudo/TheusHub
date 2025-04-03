@@ -1,155 +1,213 @@
--- Criando a interface principal
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local Title = Instance.new("TextLabel")
+-- Configurações Principais
+getgenv().Settings = {
+    AutoFarm = false,
+    AutoQuest = false,
+    AutoRaid = false,
+    AutoHaki = false,
+    AutoStats = false,
+    FruitESP = false,
+    SelectedBuild = "Sword",
+    WebhookURL = "",
+}
 
--- Configurando a GUI principal
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- Sistema de Login
+local LoginSystem = {
+    Authenticated = false,
+    CurrentUser = "",
+    License = "",
+}
 
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-MainFrame.Size = UDim2.new(0, 300, 0, 350)
-MainFrame.Active = true
-MainFrame.Draggable = true
+function LoginSystem:Verify(username, license)
+    -- Implementar verificação com servidor
+    if username and license then
+        self.Authenticated = true
+        self.CurrentUser = username
+        self.License = license
+        return true
+    end
+    return false
+end
 
-UICorner.Parent = MainFrame
-UICorner.CornerRadius = UDim.new(0, 10)
+-- Sistema de Farm
+local AutoFarm = {
+    Active = false,
+    CurrentMob = nil,
+    FarmMethod = "Behind",
+}
 
-Title.Parent = MainFrame
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0.05, 0)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "Theus Hub"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 22
-
--- Campos de login
-local UsernameBox = Instance.new("TextBox")
-local PasswordBox = Instance.new("TextBox")
-local LoginButton = Instance.new("TextButton")
-
--- Configurando campos de texto
-UsernameBox.Parent = MainFrame
-UsernameBox.Position = UDim2.new(0.2, 0, 0.3, 0)
-UsernameBox.Size = UDim2.new(0.6, 0, 0, 30)
-UsernameBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-UsernameBox.PlaceholderText = "Username"
-UsernameBox.Text = ""
-UsernameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-UsernameBox.PlaceholderColor3 = Color3.fromRGB(178, 178, 178)
-
-PasswordBox.Parent = MainFrame
-PasswordBox.Position = UDim2.new(0.2, 0, 0.5, 0)
-PasswordBox.Size = UDim2.new(0.6, 0, 0, 30)
-PasswordBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-PasswordBox.PlaceholderText = "Password"
-PasswordBox.Text = ""
-PasswordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-PasswordBox.PlaceholderColor3 = Color3.fromRGB(178, 178, 178)
-
--- Configurando botão de login
-LoginButton.Parent = MainFrame
-LoginButton.Position = UDim2.new(0.2, 0, 0.7, 0)
-LoginButton.Size = UDim2.new(0.6, 0, 0, 30)
-LoginButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-LoginButton.Text = "Login"
-LoginButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-LoginButton.TextSize = 16
-
--- Funções principais
-local functions = {}
-local enabled = false
-
-function functions.Toggle()
-    enabled = not enabled
-    if enabled then
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
-    else
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+function AutoFarm:Start()
+    self.Active = true
+    while self.Active do
+        if self.CurrentMob then
+            -- Lógica de farm
+            local mob = self.CurrentMob
+            local humanoid = game.Players.LocalPlayer.Character.Humanoid
+            humanoid.WalkSpeed = 100
+            wait()
+        end
     end
 end
 
-function functions.SuperJump()
-    game.Players.LocalPlayer.Character.Humanoid.JumpPower = 100
+function AutoFarm:Stop()
+    self.Active = false
 end
 
-function functions.Teleport(player)
-    local character = game.Players.LocalPlayer.Character
-    local targetPlayer = game.Players:FindFirstChild(player)
-    if targetPlayer and targetPlayer.Character then
-        character:MoveTo(targetPlayer.Character.HumanoidRootPart.Position)
+-- Sistema de Quests
+local QuestSystem = {
+    Active = false,
+    CurrentQuest = nil,
+}
+
+function QuestSystem:GetQuest()
+    local playerLevel = game.Players.LocalPlayer.Data.Level.Value
+    -- Lógica de seleção de quest baseada no level
+end
+
+function QuestSystem:Start()
+    self.Active = true
+    while self.Active do
+        self:GetQuest()
+        wait(1)
     end
 end
 
--- Sistema de login
-LoginButton.MouseButton1Click:Connect(function()
-    local username = UsernameBox.Text
-    local password = PasswordBox.Text
-    
-    if (username == "admin" and password == "123") then
-        MainFrame.Visible = false
-        -- Aqui você pode adicionar o que acontece após o login
-        -- Por exemplo, mostrar os botões das funções
-        loadFunctions()
+-- Sistema de Raid
+local RaidSystem = {
+    Active = false,
+    CurrentChip = nil,
+    RaidMode = "Normal",
+}
+
+function RaidSystem:SelectChip()
+    -- Lógica de seleção de chip
+end
+
+function RaidSystem:Start()
+    self.Active = true
+    while self.Active do
+        self:SelectChip()
+        -- Lógica de raid
+        wait(1)
     end
-end)
+end
 
--- Função para carregar os botões das funções
-function loadFunctions()
-    local FunctionsFrame = Instance.new("Frame")
-    FunctionsFrame.Name = "FunctionsFrame"
-    FunctionsFrame.Parent = ScreenGui
-    FunctionsFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    FunctionsFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
-    FunctionsFrame.Size = UDim2.new(0, 300, 0, 350)
-    FunctionsFrame.Active = true
-    FunctionsFrame.Draggable = true
-    
-    local UICorner = Instance.new("UICorner")
-    UICorner.Parent = FunctionsFrame
-    UICorner.CornerRadius = UDim.new(0, 10)
-    
-    -- Criando botões para as funções
-    local function createFunctionButton(name, position)
-        local button = Instance.new("TextButton")
-        button.Parent = FunctionsFrame
-        button.Position = position
-        button.Size = UDim2.new(0.8, 0, 0, 30)
-        button.Position = UDim2.new(0.1, 0, position, 0)
-        button.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-        button.Text = name
-        button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        button.TextSize = 14
-        local ButtonUICorner = Instance.new("UICorner")
-        ButtonUICorner.Parent = button
-        ButtonUICorner.CornerRadius = UDim.new(0, 6)
-        return button
+-- Sistema de Auto Haki
+local HakiSystem = {
+    Active = false,
+    ColorHaki = true,
+    ArmorHaki = true,
+}
+
+function HakiSystem:Activate()
+    while self.Active do
+        -- Lógica de ativação de haki
+        wait(1)
     end
+end
 
-    local toggleButton = createFunctionButton("Toggle Speed", 0.2)
-    local jumpButton = createFunctionButton("Super Jump", 0.4)
-    local teleportButton = createFunctionButton("Teleport", 0.6)
+-- Sistema de Stats
+local StatSystem = {
+    Active = false,
+    Builds = {
+        Sword = {
+            Melee = 0.3,
+            Defense = 0.3,
+            Sword = 0.4,
+        },
+        Devil = {
+            Melee = 0.2,
+            Defense = 0.3,
+            DevilFruit = 0.5,
+        },
+    },
+}
 
-    toggleButton.MouseButton1Click:Connect(functions.Toggle)
-    jumpButton.MouseButton1Click:Connect(functions.SuperJump)
-    teleportButton.MouseButton1Click:Connect(function()
-        functions.Teleport("NomeDoJogador")
+function StatSystem:Distribute()
+    local build = self.Builds[Settings.SelectedBuild]
+    -- Lógica de distribuição de pontos
+end
+
+-- ESP de Frutas
+local FruitESP = {
+    Active = false,
+    Fruits = {},
+}
+
+function FruitESP:Initialize()
+    local espFolder = Instance.new("Folder")
+    espFolder.Name = "FruitESP"
+    espFolder.Parent = game.CoreGui
+    
+    -- Monitor de frutas
+    game.Workspace.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") and child:FindFirstChild("FruitEat") then
+            self:CreateESP(child)
+        end
     end)
 end
 
--- Efeitos visuais
-local function addHoverEffect(button)
-    button.MouseEnter:Connect(function()
-        game:GetService("TweenService"):Create(button, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 100, 220)}):Play()
-    end)
-    button.MouseLeave:Connect(function()
-        game:GetService("TweenService"):Create(button, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(0, 120, 255)}):Play()
+-- Sistema de Raças
+local RaceSystem = {
+    Active = false,
+    CurrentTrial = nil,
+    TrialProgress = 0,
+}
+
+function RaceSystem:StartTrial()
+    -- Lógica de trials V2 e V3
+end
+
+-- Interface Principal
+local UI = {
+    MainWindow = nil,
+    Tabs = {},
+}
+
+function UI:Create()
+    -- Criar interface principal
+    local MainGui = Instance.new("ScreenGui")
+    MainGui.Name = "TheusHub"
+    MainGui.Parent = game.CoreGui
+    
+    -- Implementar resto da interface
+end
+
+-- Inicialização
+local function Initialize()
+    UI:Create()
+    FruitESP:Initialize()
+    
+    -- Conectar eventos e callbacks
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if Settings.AutoFarm then AutoFarm:Start() end
+        if Settings.AutoQuest then QuestSystem:Start() end
+        if Settings.AutoRaid then RaidSystem:Start() end
+        if Settings.AutoHaki then HakiSystem:Activate() end
+        if Settings.AutoStats then StatSystem:Distribute() end
     end)
 end
 
-addHoverEffect(LoginButton)
+-- Sistema Anti-Detecção
+local Security = {
+    Hooks = {},
+    Protected = false,
+}
+
+function Security:Setup()
+    -- Implementar proteções
+end
+
+-- Exportar Módulos
+return {
+    Initialize = Initialize,
+    Login = LoginSystem,
+    Farm = AutoFarm,
+    Quest = QuestSystem,
+    Raid = RaidSystem,
+    Haki = HakiSystem,
+    Stats = StatSystem,
+    ESP = FruitESP,
+    Race = RaceSystem,
+    UI = UI,
+    Security = Security,
+}
