@@ -11320,7 +11320,7 @@ spawn(function()
     end)
 
 OrionLib:MakeNotification({
-        Name = "Sla Hub",
+        Name = "Theus Hub",
         Content = "Loading script complete!, You can now enable the function!",
         Image = "rbxassetid://119980140458596",
         Time = 5
