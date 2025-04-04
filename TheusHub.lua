@@ -414,3 +414,179 @@ local function GetCurrentQuest()
     
     return currentQuest
 end
+
+-- Funções de Utilidade
+local function GetDistance(targetPosition)
+    local humanoidRootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        return (humanoidRootPart.Position - targetPosition).Magnitude
+    end
+    return math.huge
+end
+
+local function Tween(targetCFrame)
+    local humanoidRootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        local distance = GetDistance(targetCFrame.Position)
+        local tweenInfo = TweenInfo.new(distance/getgenv().Settings.TweenSpeed, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = targetCFrame})
+        tween:Play()
+        return tween
+    end
+end
+
+-- Sistema de Auto Farm
+local function StartAutoFarm()
+    spawn(function()
+        while getgenv().Settings.AutoFarm do
+            pcall(function()
+                local currentQuest = GetCurrentQuest()
+                if currentQuest then
+                    if not game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible then
+                        -- Pegar Quest
+                        Tween(currentQuest.CFrameQuest)
+                        wait(1)
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", currentQuest.Quest, currentQuest.Level)
+                        wait(0.5)
+                    end
+
+                    -- Farm Mobs
+                    for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                        if mob.Name == currentQuest.Monster and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                            repeat
+                                wait()
+                                if getgenv().Settings.AutoHaki then
+                                    if not game.Players.LocalPlayer.Character:FindFirstChild("HasBuso") then
+                                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+                                    end
+                                end
+                                
+                                if getgenv().Settings.AutoKen then
+                                    if not game.Players.LocalPlayer.Character:FindFirstChild("HasKen") then
+                                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("KenHaki")
+                                    end
+                                end
+                                
+                                mob.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                                mob.HumanoidRootPart.Transparency = 0.8
+                                mob.Humanoid.JumpPower = 0
+                                mob.Humanoid.WalkSpeed = 0
+                                
+                                Tween(mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                
+                                if getgenv().Settings.FastAttack then
+                                    game:GetService("VirtualUser"):CaptureController()
+                                    game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                                end
+                            until not getgenv().Settings.AutoFarm or not mob.Parent or mob.Humanoid.Health <= 0 or not game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible
+                        end
+                    end
+                end
+            end)
+            wait()
+        end
+    end)
+end
+
+-- Adicionando Toggles na Interface
+-- Farming Page
+local AutoFarmToggle = CreateToggle(FramingPage, "Auto Farm", function(enabled)
+    getgenv().Settings.AutoFarm = enabled
+    if enabled then
+        StartAutoFarm()
+    end
+end)
+
+local FastAttackToggle = CreateToggle(FramingPage, "Fast Attack", function(enabled)
+    getgenv().Settings.FastAttack = enabled
+end)
+
+local AutoHakiToggle = CreateToggle(FramingPage, "Auto Buso", function(enabled)
+    getgenv().Settings.AutoHaki = enabled
+end)
+
+local AutoKenToggle = CreateToggle(FramingPage, "Auto Ken", function(enabled)
+    getgenv().Settings.AutoKen = enabled
+end)
+
+-- Teleport Page
+local function CreateTeleportButton(name, cframe)
+    local TeleportButton = Instance.new("TextButton")
+    TeleportButton.Name = name.."Button"
+    TeleportButton.Parent = TeleportPage
+    TeleportButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    TeleportButton.BorderSizePixel = 0
+    TeleportButton.Size = UDim2.new(1, 0, 0, 40)
+    TeleportButton.Font = Enum.Font.GothamSemibold
+    TeleportButton.Text = name
+    TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TeleportButton.TextSize = 14
+    
+    TeleportButton.MouseButton1Click:Connect(function()
+        Tween(cframe)
+    end)
+    
+    return TeleportButton
+end
+
+-- Adicionar botões de teleporte para todas as áreas importantes
+local TeleportLocations = {
+    ["First Island"] = CFrame.new(1041.79712, 16.1520348, 1426.06348),
+    ["Marine Base"] = CFrame.new(-4914.8212890625, 50.963626861572266, 4281.0498046875),
+    ["Middle Town"] = CFrame.new(-655.824158, 7.88708115, 1436.67908),
+    ["Jungle"] = CFrame.new(-1249.77222, 11.8870859, 341.356476),
+    ["Pirate Village"] = CFrame.new(-1122.34998, 4.78708982, 3855.91992),
+    ["Desert"] = CFrame.new(1094.14587, 6.47350502, 4192.88721),
+    ["Frozen Village"] = CFrame.new(1198.00928, 27.0074959, -1211.73376),
+    ["MarineFord"] = CFrame.new(-4882.8623, 22.6520386, 4255.53516),
+    ["Colosseum"] = CFrame.new(-1836.58191, 44.5890656, -2969.25659),
+    ["Sky Island 1"] = CFrame.new(-4970.21875, 717.707275, -2622.35449),
+    ["Sky Island 2"] = CFrame.new(-7994.5127, 5756.34229, -2088.54688),
+    ["Sky Island 3"] = CFrame.new(-7925.48389, 5550.76074, -863.114502),
+    ["Prison"] = CFrame.new(4875.330078125, 5.6519818305969238, 734.85021972656),
+    ["Magma Village"] = CFrame.new(-5231.75879, 8.61593437, 8467.87695),
+    ["Underwater City"] = CFrame.new(61163.8516, 11.7796879, 1819.78418),
+    ["Fountain City"] = CFrame.new(5132.7124, 4.53632832, 4037.8562)
+}
+
+for name, cframe in pairs(TeleportLocations) do
+    CreateTeleportButton(name, cframe)
+end
+
+-- Fake Page
+local function CreateFakeButton(name, callback)
+    local FakeButton = Instance.new("TextButton")
+    FakeButton.Name = name.."Button"
+    FakeButton.Parent = FakePage
+    FakeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    FakeButton.BorderSizePixel = 0
+    FakeButton.Size = UDim2.new(1, 0, 0, 40)
+    FakeButton.Font = Enum.Font.GothamSemibold
+    FakeButton.Text = name
+    FakeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    FakeButton.TextSize = 14
+    
+    FakeButton.MouseButton1Click:Connect(callback)
+    
+    return FakeButton
+end
+
+-- Adicionar botões fake
+CreateFakeButton("Fake Level", function()
+    -- Implementar lógica de fake level
+end)
+
+CreateFakeButton("Fake Beli", function()
+    -- Implementar lógica de fake beli
+end)
+
+CreateFakeButton("Fake Fragment", function()
+    -- Implementar lógica de fake fragment
+end)
+
+-- Anti AFK
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+    wait(1)
+    game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+end)
