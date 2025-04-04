@@ -1992,9 +1992,10 @@ ToggleNoClip()
 ToggleInfiniteStamina()
 ESP:Start()
 
--- Blox Fruits Ultimate Script (Parte 9/10 - Atualizada)
--- Sistemas de UI e Customização Aprimorada
+-- Blox Fruits Ultimate Script (Parte 9/10 - Nova Interface 2)
+local TweenService = game:GetService("TweenService")
 
+-- Configurações de UI
 local UIConfig = {
     MainColor = Color3.fromRGB(0, 170, 255),
     BackgroundColor = Color3.fromRGB(25, 25, 25),
@@ -2002,206 +2003,219 @@ local UIConfig = {
     AccentColor = Color3.fromRGB(40, 40, 40),
     TextColor = Color3.fromRGB(255, 255, 255),
     Font = Enum.Font.GothamBold,
-    TextSize = 14,
-    IconSize = UDim2.new(0, 25, 0, 25)
+    TextSize = 14
 }
 
--- Ícones para cada tab (usando IDs do Roblox)
-local Icons = {
-    Main = "rbxassetid://11558196447",
-    Stats = "rbxassetid://11558190140",
-    Teleport = "rbxassetid://11558190140",
-    Raid = "rbxassetid://11558190140",
-    Shop = "rbxassetid://11558190140",
-    Misc = "rbxassetid://11558190140",
-    Fruit = "rbxassetid://11558190140",
-    Settings = "rbxassetid://11558190140"
-}
-
--- Criar UI Principal
+-- Criar ScreenGui principal
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FsUltimate"
-ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Parent = game.CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+-- Frame Principal
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = UIConfig.BackgroundColor
-MainFrame.Position = UDim2.new(0, 20, 0.5, -175)
-MainFrame.Size = UDim2.new(0, 200, 0, 350)
-MainFrame.ClipsDescendants = true
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
+-- Arredondar cantos
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- Sombra
-local DropShadow = Instance.new("ImageLabel")
-DropShadow.Name = "DropShadow"
-DropShadow.Parent = MainFrame
-DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-DropShadow.BackgroundTransparency = 1
-DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-DropShadow.Size = UDim2.new(1, 47, 1, 47)
-DropShadow.Image = "rbxassetid://6015897843"
-DropShadow.ImageColor3 = Color3.new(0, 0, 0)
-DropShadow.ImageTransparency = 0.5
-DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
-DropShadow.ScaleType = Enum.ScaleType.Slice
-DropShadow.SliceScale = 1
-DropShadow.ZIndex = -1
+-- Barra superior
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = UIConfig.SecondaryColor
+TopBar.BorderSizePixel = 0
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 10)
+TopBarCorner.Parent = TopBar
 
 -- Título
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
-Title.Parent = MainFrame
+Title.Parent = TopBar
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 15, 0, 15)
-Title.Size = UDim2.new(1, -30, 0, 20)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.Size = UDim2.new(0, 200, 1, 0)
 Title.Font = UIConfig.Font
 Title.Text = "Fs Ultimate"
 Title.TextColor3 = UIConfig.TextColor
-Title.TextSize = 18
+Title.TextSize = 16
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Container de Tabs
-local TabContainer = Instance.new("ScrollingFrame")
+-- Botão Fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = TopBar
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.Position = UDim2.new(1, -35, 0.5, -12)
+CloseButton.Size = UDim2.new(0, 24, 0, 24)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = UIConfig.TextColor
+CloseButton.TextSize = 14
+CloseButton.AutoButtonColor = false
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+-- Botão Minimizar
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Parent = TopBar
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MinimizeButton.Position = UDim2.new(1, -70, 0.5, -12)
+MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = UIConfig.TextColor
+MinimizeButton.TextSize = 14
+MinimizeButton.AutoButtonColor = false
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 6)
+MinimizeCorner.Parent = MinimizeButton
+
+-- Container das Tabs
+local TabContainer = Instance.new("Frame")
 TabContainer.Name = "TabContainer"
 TabContainer.Parent = MainFrame
-TabContainer.BackgroundTransparency = 1
-TabContainer.Position = UDim2.new(0, 0, 0, 50)
-TabContainer.Size = UDim2.new(1, 0, 1, -50)
-TabContainer.ScrollBarThickness = 0
-TabContainer.ScrollingDirection = Enum.ScrollingDirection.Y
-TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+TabContainer.BackgroundColor3 = UIConfig.SecondaryColor
+TabContainer.BorderSizePixel = 0
+TabContainer.Position = UDim2.new(0, 0, 0, 35)
+TabContainer.Size = UDim2.new(0, 150, 1, -35)
+
+local TabContainerCorner = Instance.new("UICorner")
+TabContainerCorner.CornerRadius = UDim.new(0, 10)
+TabContainerCorner.Parent = TabContainer
+
+-- Lista de Tabs
+local TabList = Instance.new("ScrollingFrame")
+TabList.Name = "TabList"
+TabList.Parent = TabContainer
+TabList.Active = true
+TabList.BackgroundTransparency = 1
+TabList.Position = UDim2.new(0, 0, 0, 10)
+TabList.Size = UDim2.new(1, 0, 1, -20)
+TabList.ScrollBarThickness = 0
+TabList.ScrollingDirection = Enum.ScrollingDirection.Y
 
 local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Parent = TabContainer
+UIListLayout.Parent = TabList
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 5)
-UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- Função para criar botão de tab
-local function CreateTab(name, icon)
+-- Função para criar botões de tab
+local function CreateTab(name)
     local TabButton = Instance.new("TextButton")
-    TabButton.Name = name.."Tab"
-    TabButton.Parent = TabContainer
-    TabButton.BackgroundColor3 = UIConfig.SecondaryColor
-    TabButton.Size = UDim2.new(0.9, 0, 0, 40)
+    TabButton.Name = name
+    TabButton.Parent = TabList
+    TabButton.BackgroundColor3 = UIConfig.AccentColor
+    TabButton.Size = UDim2.new(0.9, 0, 0, 35)
     TabButton.Font = UIConfig.Font
-    TabButton.Text = "  "..name
+    TabButton.Text = name
     TabButton.TextColor3 = UIConfig.TextColor
     TabButton.TextSize = UIConfig.TextSize
-    TabButton.TextXAlignment = Enum.TextXAlignment.Left
     TabButton.AutoButtonColor = false
 
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 8)
-    UICorner.Parent = TabButton
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0, 6)
+    TabCorner.Parent = TabButton
 
-    local Icon = Instance.new("ImageLabel")
-    Icon.Name = "Icon"
-    Icon.Parent = TabButton
-    Icon.BackgroundTransparency = 1
-    Icon.Position = UDim2.new(0, 10, 0.5, -12)
-    Icon.Size = UIConfig.IconSize
-    Icon.Image = icon
-    Icon.ImageColor3 = UIConfig.TextColor
-
-    -- Efeitos de hover
+    -- Efeito hover
     TabButton.MouseEnter:Connect(function()
-        game:GetService("TweenService"):Create(TabButton, TweenInfo.new(0.3), {
+        TweenService:Create(TabButton, TweenInfo.new(0.3), {
             BackgroundColor3 = UIConfig.MainColor
         }):Play()
     end)
 
     TabButton.MouseLeave:Connect(function()
-        if TabButton.Selected ~= true then
-            game:GetService("TweenService"):Create(TabButton, TweenInfo.new(0.3), {
-                BackgroundColor3 = UIConfig.SecondaryColor
-            }):Play()
-        end
+        TweenService:Create(TabButton, TweenInfo.new(0.3), {
+            BackgroundColor3 = UIConfig.AccentColor
+        }):Play()
     end)
 
     return TabButton
 end
 
--- Criar todas as tabs
-local MainTab = CreateTab("Main", Icons.Main)
-local StatsTab = CreateTab("Stats", Icons.Stats)
-local TeleportTab = CreateTab("Teleport", Icons.Teleport)
-local RaidTab = CreateTab("Raid", Icons.Raid)
-local ShopTab = CreateTab("Shop", Icons.Shop)
-local FruitTab = CreateTab("Fruit", Icons.Fruit)
-local MiscTab = CreateTab("Misc", Icons.Misc)
-local SettingsTab = CreateTab("Settings", Icons.Settings)
-
--- Ajustar tamanho do canvas
-UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    TabContainer.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-end)
-
--- Tornar a UI arrastável
-local UserInputService = game:GetService("UserInputService")
-local dragging
-local dragInput
-local dragStart
-local startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+-- Criar as tabs
+local tabs = {"Main", "Stats", "Teleport", "Raid", "Shop", "Fruit", "Misc", "Settings"}
+for i, tabName in ipairs(tabs) do
+    CreateTab(tabName)
 end
 
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
+-- Container de Conteúdo
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Name = "ContentContainer"
+ContentContainer.Parent = MainFrame
+ContentContainer.BackgroundColor3 = UIConfig.SecondaryColor
+ContentContainer.BorderSizePixel = 0
+ContentContainer.Position = UDim2.new(0, 150, 0, 35)
+ContentContainer.Size = UDim2.new(1, -150, 1, -35)
 
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 10)
+ContentCorner.Parent = ContentContainer
 
-MainFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
-
--- Botão de minimizar
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Parent = MainFrame
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Position = UDim2.new(1, -35, 0, 15)
-MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-MinimizeButton.Font = UIConfig.Font
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = UIConfig.TextColor
-MinimizeButton.TextSize = 20
-
+-- Funcionalidade dos botões
 local minimized = false
+local originalSize = MainFrame.Size
+
 MinimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
     if minimized then
-        MainFrame:TweenSize(UDim2.new(0, 200, 0, 50), "Out", "Quad", 0.3, true)
+        MainFrame:TweenSize(UDim2.new(0, 600, 0, 35), "Out", "Quad", 0.3, true)
         MinimizeButton.Text = "+"
     else
-        MainFrame:TweenSize(UDim2.new(0, 200, 0, 350), "Out", "Quad", 0.3, true)
+        MainFrame:TweenSize(originalSize, "Out", "Quad", 0.3, true)
         MinimizeButton.Text = "-"
     end
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Efeitos dos botões
+CloseButton.MouseEnter:Connect(function()
+    TweenService:Create(CloseButton, TweenInfo.new(0.3), {
+        BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+    }):Play()
+end)
+
+CloseButton.MouseLeave:Connect(function()
+    TweenService:Create(CloseButton, TweenInfo.new(0.3), {
+        BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    }):Play()
+end)
+
+MinimizeButton.MouseEnter:Connect(function()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.3), {
+        BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    }):Play()
+end)
+
+MinimizeButton.MouseLeave:Connect(function()
+    TweenService:Create(MinimizeButton, TweenInfo.new(0.3), {
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    }):Play()
+end)
+
+-- Ajustar tamanho da lista de tabs
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    TabList.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
 end)
 
 -- Blox Fruits Ultimate Script (Parte 10/10)
