@@ -1,32 +1,3 @@
--- Variáveis Globais e Configurações
-getgenv().AutoFarm = false
-getgenv().TweenSpeed = 250
-getgenv().AutoFarmBone = false
-getgenv().AutoEliteHunter = false
-getgenv().AutoFactory = false
-getgenv().AutoNewWorld = false
-getgenv().AutoThirdWorld = false
-getgenv().AutoBartilo = false
-getgenv().AutoRengoku = false
-getgenv().AutoEctoplasm = false
-getgenv().AutoBudySword = false
-getgenv().AutoFarmBoss = false
-getgenv().AutoFarmAllBoss = false
-getgenv().AutoFarmFruitMastery = false
-getgenv().AutoFarmGunMastery = false
-getgenv().AutoHolyTorch = false
-getgenv().AutoCombo = false
-getgenv().AutoSeaBeast = false
-getgenv().AutoPole = false
-getgenv().AutoSaber = false
-getgenv().AutoSuperhuman = false
-getgenv().AutoSharkman = false
-getgenv().AutoDeathStep = false
-getgenv().AutoElectricClaw = false
-getgenv().AutoDragonTalon = false
-getgenv().AutoGodhuman = false
-getgenv().AutoStoreFruit = false
-
 -- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -35,7 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
 local HttpService = game:GetService("HttpService")
 
--- Quest Data Sea 1
+-- Quest Data
 local QuestData = {
     ["1-9"] = {
         Monster = "Bandit [Lv. 5]",
@@ -107,6 +78,111 @@ local QuestData = {
         CFrameQuest = CFrame.new(-5035.0835, 28.6520386, 4325.29443),
         CFrameMon = CFrame.new(-4882.8623, 22.6520386, 4255.53516)
     },
+    ["150-174"] = {
+        Monster = "Sky Bandit [Lv. 150]",
+        Quest = "SkyQuest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(-4841.83447, 717.669617, -2623.96436),
+        CFrameMon = CFrame.new(-4970.74219, 294.544342, -2890.11353)
+    },
+    ["175-199"] = {
+        Monster = "Dark Master [Lv. 175]",
+        Quest = "SkyQuest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(-4841.83447, 717.669617, -2623.96436),
+        CFrameMon = CFrame.new(-5148.65576, 315.896149, -2966.29443)
+    },
+    ["200-249"] = {
+        Monster = "Prisoner [Lv. 190]",
+        Quest = "PrisonQuest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(5308.93115, 1.65517521, 475.120514),
+        CFrameMon = CFrame.new(5433.39307, 88.7827377, 514.986877)
+    },
+    ["250-299"] = {
+        Monster = "Dangerous Prisoner [Lv. 210]",
+        Quest = "PrisonQuest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(5308.93115, 1.65517521, 475.120514),
+        CFrameMon = CFrame.new(5433.39307, 88.7827377, 514.986877)
+    },
+    ["300-349"] = {
+        Monster = "Imposter [Lv. 300]",
+        Quest = "SkyQ4est",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(-4970.74219, 371.542358, -2931.52637),
+        CFrameMon = CFrame.new(-5444.5625, 601.207275, -2972.15723)
+    },
+    ["350-374"] = {
+        Monster = "Posessed Mink [Lv. 340]",
+        Quest = "ColosseumQuest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(-1577.58059, 7.38933945, -2984.53564),
+        CFrameMon = CFrame.new(-1887.58472, 88.2324295, -3021.78467)
+    },
+    ["375-399"] = {
+        Monster = "Galley Pirate [Lv. 360]",
+        Quest = "ColosseumQuest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(-1577.58059, 7.38933945, -2984.53564),
+        CFrameMon = CFrame.new(-1876.91589, 73.0770416, -2789.8958)
+    },
+    ["400-449"] = {
+        Monster = "Raider [Lv. 400]",
+        Quest = "IceSideQuest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(-5418.92236, 10.9001846, -5296.53223),
+        CFrameMon = CFrame.new(-5552.69336, 60.7770386, -5484.03906)
+    },
+    ["450-499"] = {
+        Monster = "Arctic Warrior [Lv. 425]",
+        Quest = "IceSideQuest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(-5418.92236, 10.9001846, -5296.53223),
+        CFrameMon = CFrame.new(-5984.18115, 82.3534927, -5833.93506)
+    },
+    ["500-599"] = {
+        Monster = "Snow Lurker [Lv. 500]",
+        Quest = "FrostQuest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(5669.43506, 28.2117786, -6482.60107),
+        CFrameMon = CFrame.new(5518.00684, 60.5559731, -6828.80518)
+    },
+    ["600-699"] = {
+        Monster = "Sea Soldier [Lv. 600]",
+        Quest = "FrostQuest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(5669.43506, 28.2117786, -6482.60107),
+        CFrameMon = CFrame.new(5659.5002, 111.874153, -6479.60547)
+    },
+    ["700-749"] = {
+        Monster = "Water Fighter [Lv. 675]",
+        Quest = "DeepForestIsland3Quest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(-10580.9102, 330.379028, -8667.68262),
+        CFrameMon = CFrame.new(-10557.6943, 412.466034, -9722.3853)
+    },
+    ["750-799"] = {
+        Monster = "Fishman Warrior [Lv. 725]",
+        Quest = "DeepForestIsland3Quest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(-10580.9102, 330.379028, -8667.68262),
+        CFrameMon = CFrame.new(-10523.1875, 392.87973, -10510.6309)
+    },
+    ["800-849"] = {
+        Monster = "Fishman Commando [Lv. 750]",
+        Quest = "FishmanQuest",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(61123.0859, 18.5066795, 1570.18018),
+        CFrameMon = CFrame.new(61163.8516, 28.7774258, 1819.76708)
+    },
+    ["850-899"] = {
+        Monster = "God's Guard [Lv. 975]",
+        Quest = "FishmanQuest",
+        QuestLv = 2,
+        CFrameQuest = CFrame.new(61123.0859, 18.5066795, 1570.18018),
+        CFrameMon = CFrame.new(8787.17969, 143.610001, 4288.6377)
+    }
 }
 
 -- Funções Utilitárias Base
@@ -158,6 +234,8 @@ function AutoFarmQuest()
                     if mob.Name == QuestInfo.Monster and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
                         repeat
                             task.wait()
+                            
+                            -- Sistema de FastStack
                             mob.HumanoidRootPart.Size = Vector3.new(60,60,60)
                             mob.HumanoidRootPart.Transparency = 0.8
                             mob.Humanoid.JumpPower = 0
@@ -165,6 +243,7 @@ function AutoFarmQuest()
                             mob.HumanoidRootPart.CanCollide = false
                             mob.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,20,-50)
                             LocalPlayer.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0,20,0)
+                            
                             game:GetService("VirtualUser"):CaptureController()
                             game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
                         until not getgenv().AutoFarm or mob.Humanoid.Health <= 0 or not mob.Parent
@@ -187,6 +266,16 @@ function AutoStats()
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
             end
             if getgenv().AutoDefense then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1
+
+-- Sistema de Auto Stats
+function AutoStats()
+    spawn(function()
+        while wait() do
+            if getgenv().AutoMelee then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Melee", 1)
+            end
+            if getgenv().AutoDefense then
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Defense", 1)
             end
             if getgenv().AutoSword then
@@ -197,48 +286,6 @@ function AutoStats()
             end
             if getgenv().AutoDevilFruit then
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", "Demon Fruit", 1)
-            end
-        end
-    end)
-end
-
--- Sistema de Auto Haki
-function AutoHaki()
-    if not game:GetService("Players").LocalPlayer.Character:FindFirstChild("HasBuso") then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
-    end
-end
-
--- Sistema de Auto Skills
-function AutoSkills()
-    spawn(function()
-        while wait() do
-            if getgenv().AutoFarm then
-                pcall(function()
-                    local args = {
-                        [1] = "Z",
-                        [2] = Vector3.new()
-                    }
-                    game:GetService("Players").LocalPlayer.Character[game:GetService("Players").LocalPlayer.Data.DevilFruit.Value].RemoteEvent:FireServer(unpack(args))
-                    wait(0.5)
-                    local args = {
-                        [1] = "X",
-                        [2] = Vector3.new()
-                    }
-                    game:GetService("Players").LocalPlayer.Character[game:GetService("Players").LocalPlayer.Data.DevilFruit.Value].RemoteEvent:FireServer(unpack(args))
-                    wait(0.5)
-                    local args = {
-                        [1] = "C",
-                        [2] = Vector3.new()
-                    }
-                    game:GetService("Players").LocalPlayer.Character[game:GetService("Players").LocalPlayer.Data.DevilFruit.Value].RemoteEvent:FireServer(unpack(args))
-                    wait(0.5)
-                    local args = {
-                        [1] = "V",
-                        [2] = Vector3.new()
-                    }
-                    game:GetService("Players").LocalPlayer.Character[game:GetService("Players").LocalPlayer.Data.DevilFruit.Value].RemoteEvent:FireServer(unpack(args))
-                end)
             end
         end
     end)
