@@ -506,3 +506,158 @@ function AutoSuperhuman()
         end
     end)
 end
+
+-- Sistema de Teleporte
+function TeleportToIsland()
+    if IslandCFrames[getgenv().SelectedIsland] then
+        Tween(IslandCFrames[getgenv().SelectedIsland])
+    end
+end
+
+-- Sistema de Frutas
+function AutoStoreFruit()
+    spawn(function()
+        while wait() do
+            if getgenv().AutoStoreFruit then
+                if LocalPlayer.Character:FindFirstChild("Bomb Fruit") or LocalPlayer.Character:FindFirstChild("Venom Fruit") or LocalPlayer.Character:FindFirstChild("Magma Fruit") or LocalPlayer.Character:FindFirstChild("Rubber Fruit") or LocalPlayer.Character:FindFirstChild("Ice Fruit") or LocalPlayer.Character:FindFirstChild("Smoke Fruit") or LocalPlayer.Character:FindFirstChild("Spring Fruit") or LocalPlayer.Character:FindFirstChild("Chop Fruit") or LocalPlayer.Character:FindFirstChild("Kilo Fruit") or LocalPlayer.Character:FindFirstChild("Spin Fruit") or LocalPlayer.Character:FindFirstChild("Bird: Falcon Fruit") or LocalPlayer.Character:FindFirstChild("Spike Fruit") or LocalPlayer.Character:FindFirstChild("Chop Fruit") or LocalPlayer.Character:FindFirstChild("Shadow Fruit") or LocalPlayer.Character:FindFirstChild("Phoenix Fruit") or LocalPlayer.Character:FindFirstChild("Dragon Fruit") or LocalPlayer.Character:FindFirstChild("Human: Buddha Fruit") then
+                    local args = {
+                        [1] = "StoreFruit",
+                        [2] = LocalPlayer.Character[LocalPlayer.Data.DevilFruit.Value]
+                    }
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+                end
+            end
+        end
+    end)
+end
+
+function AutoRandomFruit()
+    spawn(function()
+        while wait() do
+            if getgenv().AutoRandomFruit then
+                local args = {
+                    [1] = "Cousin",
+                    [2] = "Buy"
+                }
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+            end
+        end
+    end)
+end
+
+-- Sistema de Raids
+function AutoRaid()
+    spawn(function()
+        while wait() do
+            if getgenv().AutoRaid then
+                local args = {
+                    [1] = "Awakener",
+                    [2] = "Check"
+                }
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+                local args = {
+                    [1] = "Awakener",
+                    [2] = "Awaken"
+                }
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+            end
+        end
+    end)
+end
+
+-- Sistema de Shop
+function AutoBuyCombat()
+    spawn(function()
+        while wait() do
+            if getgenv().AutoBuyCombat then
+                local args = {
+                    [1] = "BuyItem",
+                    [2] = "Combat"
+                }
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+            end
+        end
+    end)
+end
+
+-- Anti AFK
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+-- Server Hop
+function HopServer()
+    local PlaceID = game.PlaceId
+    local AllIDs = {}
+    local foundAnything = ""
+    local actualHour = os.date("!*t").hour
+    local Deleted = false
+
+    local File = pcall(function()
+        AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
+    end)
+    if not File then
+        table.insert(AllIDs, actualHour)
+        writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+    end
+    
+    function TPReturner()
+        local Site;
+        if foundAnything == "" then
+            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+        else
+            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+        end
+        local ID = ""
+        if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+            foundAnything = Site.nextPageCursor
+        end
+        local num = 0;
+        for i,v in pairs(Site.data) do
+            local Possible = true
+            ID = tostring(v.id)
+            if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                for _,Existing in pairs(AllIDs) do
+                    if num ~= 0 then
+                        if ID == tostring(Existing) then
+                            Possible = false
+                        end
+                    else
+                        if tonumber(actualHour) ~= tonumber(Existing) then
+                            local delFile = pcall(function()
+                                delfile("NotSameServers.json")
+                                AllIDs = {}
+                                table.insert(AllIDs, actualHour)
+                            end)
+                        end
+                    end
+                    num = num + 1
+                end
+                if Possible == true then
+                    table.insert(AllIDs, ID)
+                    wait()
+                    pcall(function()
+                        writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+                        wait()
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                    end)
+                    wait(4)
+                end
+            end
+        end
+    end
+
+    function Teleport()
+        while wait() do
+            pcall(function()
+                TPReturner()
+                if foundAnything ~= "" then
+                    TPReturner()
+                end
+            end)
+        end
+    end
+
+    Teleport()
+end
