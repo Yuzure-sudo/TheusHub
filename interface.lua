@@ -1,5 +1,5 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Theus Hub Premium", "DarkTheme")
+local Window = Library.CreateLib("Theus Hub", "DarkTheme")
 
 -- Função para centralizar a janela
 local ScreenGui = Instance.new("ScreenGui")
@@ -41,41 +41,31 @@ end)
 
 -- Tabs Principais
 local MainTab = Window:NewTab("Main")
-local StatsTab = Window:NewTab("Stats")
+local FarmTab = Window:NewTab("Farm")
 local CombatTab = Window:NewTab("Combat")
-local SwordTab = Window:NewTab("Sword")
 local QuestTab = Window:NewTab("Quest")
 local FruitTab = Window:NewTab("Fruit")
 local TeleportTab = Window:NewTab("Teleport")
-local RaidTab = Window:NewTab("Raid")
-local ShopTab = Window:NewTab("Shop")
 local MiscTab = Window:NewTab("Misc")
 
 -- Main Section
-local MainSection = MainTab:NewSection("Auto Farm")
-MainSection:NewToggle("Auto Farm Level", "Auto farms with quests", function(state)
+local MainSection = MainTab:NewSection("Overview")
+MainSection:NewLabel("Welcome to Theus Hub!")
+MainSection:NewLabel("This hub provides various features to enhance your gameplay.")
+
+-- Farm Section
+local FarmSection = FarmTab:NewSection("Auto Farm")
+FarmSection:NewToggle("Auto Farm Level", "Automatically farms with quests", function(state)
     getgenv().AutoFarm = state
 end)
 
-MainSection:NewToggle("Auto Farm Nearest", "Farms nearest mob", function(state)
+FarmSection:NewToggle("Auto Farm Nearest", "Automatically farms nearest mob", function(state)
     getgenv().AutoFarmNearest = state
 end)
 
--- Stats Section
-local StatsSection = StatsTab:NewSection("Auto Stats")
-local StatsList = {
-    {name = "Melee", icon = "👊", toggle = "AutoMelee"},
-    {name = "Defense", icon = "🛡️", toggle = "AutoDefense"},
-    {name = "Sword", icon = "⚔️", toggle = "AutoSword"},
-    {name = "Gun", icon = "🔫", toggle = "AutoGun"},
-    {name = "Devil Fruit", icon = "🍎", toggle = "AutoDevilFruit"}
-}
-
-for _, stat in ipairs(StatsList) do
-    StatsSection:NewToggle(stat.icon .. " Auto " .. stat.name, "", function(state)
-        getgenv()[stat.toggle] = state
-    end)
-end
+FarmSection:NewSlider("Tween Speed", "Adjust the tween speed", 500, 50, function(value)
+    getgenv().TweenSpeed = value
+end)
 
 -- Combat Section
 local CombatSection = CombatTab:NewSection("Fighting Styles")
@@ -97,20 +87,6 @@ end)
 
 CombatSection:NewToggle("Auto Superhuman", "", function(state)
     getgenv().AutoSuperhuman = state
-end)
-
--- Sword Section
-local SwordSection = SwordTab:NewSection("Sword Quests")
-SwordSection:NewToggle("Auto Saber", "", function(state)
-    getgenv().AutoSaber = state
-end)
-
-SwordSection:NewToggle("Auto Rengoku", "", function(state)
-    getgenv().AutoRengoku = state
-end)
-
-SwordSection:NewToggle("Auto Pole", "", function(state)
-    getgenv().AutoPole = state
 end)
 
 -- Quest Section
@@ -164,18 +140,6 @@ TeleportSection:NewButton("Teleport", "", function()
     TeleportToIsland()
 end)
 
--- Raid Section
-local RaidSection = RaidTab:NewSection("Dungeon")
-RaidSection:NewToggle("Auto Raid", "", function(state)
-    getgenv().AutoRaid = state
-end)
-
--- Shop Section
-local ShopSection = ShopTab:NewSection("Auto Buy")
-ShopSection:NewToggle("Auto Buy Combat", "", function(state)
-    getgenv().AutoBuyCombat = state
-end)
-
 -- Misc Section
 local MiscSection = MiscTab:NewSection("Extra Features")
 MiscSection:NewButton("Server Hop", "", function()
@@ -186,6 +150,6 @@ MiscSection:NewToggle("Anti AFK", "", function(state)
     getgenv().AntiAFK = state
 end)
 
-MiscSection:NewSlider("Tween Speed", "", 500, 50, function(value)
-    getgenv().TweenSpeed = value
+MiscSection:NewButton("Rejoin Server", "", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
 end)
