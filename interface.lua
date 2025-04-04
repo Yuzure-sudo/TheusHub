@@ -1,5 +1,5 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Theus Hub Premium", "BloodTheme")
+local Window = Library.CreateLib("Theus Hub Premium", "DarkTheme")
 
 -- Função para centralizar a janela
 local ScreenGui = Instance.new("ScreenGui")
@@ -40,19 +40,19 @@ Window.MainFrame.CloseButton.MouseButton1Click:Connect(function()
 end)
 
 -- Tabs Principais
-local Main = Window:NewTab("🎮 Main")
-local Stats = Window:NewTab("📊 Stats")
-local Combat = Window:NewTab("⚔️ Combat")
-local Sword = Window:NewTab("🗡️ Sword")
-local Quest = Window:NewTab("📜 Quest")
-local Fruit = Window:NewTab("🍎 Fruit")
-local Teleport = Window:NewTab("🌍 Teleport")
-local Raid = Window:NewTab("⚔️ Raid")
-local Shop = Window:NewTab("🛍️ Shop")
-local Misc = Window:NewTab("⚙️ Misc")
+local MainTab = Window:NewTab("Main")
+local StatsTab = Window:NewTab("Stats")
+local CombatTab = Window:NewTab("Combat")
+local SwordTab = Window:NewTab("Sword")
+local QuestTab = Window:NewTab("Quest")
+local FruitTab = Window:NewTab("Fruit")
+local TeleportTab = Window:NewTab("Teleport")
+local RaidTab = Window:NewTab("Raid")
+local ShopTab = Window:NewTab("Shop")
+local MiscTab = Window:NewTab("Misc")
 
 -- Main Section
-local MainSection = Main:NewSection("Auto Farm")
+local MainSection = MainTab:NewSection("Auto Farm")
 MainSection:NewToggle("Auto Farm Level", "Auto farms with quests", function(state)
     getgenv().AutoFarm = state
 end)
@@ -62,7 +62,7 @@ MainSection:NewToggle("Auto Farm Nearest", "Farms nearest mob", function(state)
 end)
 
 -- Stats Section
-local StatsSection = Stats:NewSection("Auto Stats")
+local StatsSection = StatsTab:NewSection("Auto Stats")
 local StatsList = {
     {name = "Melee", icon = "👊", toggle = "AutoMelee"},
     {name = "Defense", icon = "🛡️", toggle = "AutoDefense"},
@@ -78,7 +78,7 @@ for _, stat in ipairs(StatsList) do
 end
 
 -- Combat Section
-local CombatSection = Combat:NewSection("Fighting Styles")
+local CombatSection = CombatTab:NewSection("Fighting Styles")
 CombatSection:NewToggle("Auto Black Leg", "", function(state)
     getgenv().AutoBlackLeg = state
 end)
@@ -100,7 +100,7 @@ CombatSection:NewToggle("Auto Superhuman", "", function(state)
 end)
 
 -- Sword Section
-local SwordSection = Sword:NewSection("Sword Quests")
+local SwordSection = SwordTab:NewSection("Sword Quests")
 SwordSection:NewToggle("Auto Saber", "", function(state)
     getgenv().AutoSaber = state
 end)
@@ -114,7 +114,7 @@ SwordSection:NewToggle("Auto Pole", "", function(state)
 end)
 
 -- Quest Section
-local QuestSection = Quest:NewSection("Special Quests")
+local QuestSection = QuestTab:NewSection("Special Quests")
 QuestSection:NewToggle("Auto Bartilo Quest", "", function(state)
     getgenv().AutoBartilo = state
 end)
@@ -128,7 +128,7 @@ QuestSection:NewToggle("Auto Buddy Sword", "", function(state)
 end)
 
 -- Fruit Section
-local FruitSection = Fruit:NewSection("Devil Fruits")
+local FruitSection = FruitTab:NewSection("Devil Fruits")
 FruitSection:NewToggle("Auto Random Fruit", "", function(state)
     getgenv().AutoRandomFruit = state
 end)
@@ -138,7 +138,7 @@ FruitSection:NewToggle("Auto Store Fruit", "", function(state)
 end)
 
 -- Teleport Section
-local TeleportSection = Teleport:NewSection("Islands")
+local TeleportSection = TeleportTab:NewSection("Islands")
 local Islands = {
     "Starter Island",
     "Marine Island",
@@ -165,19 +165,19 @@ TeleportSection:NewButton("Teleport", "", function()
 end)
 
 -- Raid Section
-local RaidSection = Raid:NewSection("Dungeon")
+local RaidSection = RaidTab:NewSection("Dungeon")
 RaidSection:NewToggle("Auto Raid", "", function(state)
     getgenv().AutoRaid = state
 end)
 
 -- Shop Section
-local ShopSection = Shop:NewSection("Auto Buy")
+local ShopSection = ShopTab:NewSection("Auto Buy")
 ShopSection:NewToggle("Auto Buy Combat", "", function(state)
     getgenv().AutoBuyCombat = state
 end)
 
 -- Misc Section
-local MiscSection = Misc:NewSection("Extra Features")
+local MiscSection = MiscTab:NewSection("Extra Features")
 MiscSection:NewButton("Server Hop", "", function()
     HopServer()
 end)
