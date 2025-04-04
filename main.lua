@@ -1,0 +1,2 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/TheusHub/main/interface.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/TheusHub/main/funcoes.lua"))()
