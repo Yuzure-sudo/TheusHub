@@ -246,8 +246,9 @@ Players.LocalPlayer.Idled:connect(function()
     VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 end)
 
--- Blox Fruits Ultimate Script (Parte 2/10)
--- Sistemas de Combate e Farm
+-- Blox Fruits Ultimate Script (Parte 2/10 - Sistema de Farm e Quest)
+local TweenService = game:GetService("TweenService")
+local Interface = require(script.Parent:WaitForChild("Part9")) -- Carrega a interface da Parte 9
 
 -- Tabela de Mobs e Quests
 local MobsTable = {
@@ -306,77 +307,85 @@ local MobsTable = {
     }
 }
 
--- Sistema de Fast Attack
-local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts:WaitForChild("CombatFramework"))
-local CombatFrameworkR = getupvalues(CombatFramework)[2]
-local RigController = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.RigController)
-local RigControllerR = getupvalues(RigController)[2]
-local realbhit = require(game.ReplicatedStorage.CombatFramework.RigLib)
-local cooldownfastattack = tick()
+-- Configurações de Farm
+local FarmConfig = {
+    FarmMode = "Auto", -- "Auto" ou "Manual"
+    FarmTarget = nil, -- Inimigo alvo
+    FarmDistance = 15, -- Distância de farm
+    FarmSpeed = 50, -- Velocidade de farm
+    FarmEnabled = false -- Flag para ativar/desativar farm
+}
 
-function CurrentWeapon()
-    local ac = CombatFrameworkR.activeController
-    local ret = ac.blades[1]
-    if not ret then return game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool").Name end
-    pcall(function()
-        while ret.Parent~=game.Players.LocalPlayer.Character do ret=ret.Parent end
-    end)
-    if not ret then return game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool").Name end
-    return ret
-end
+-- Configurações de Quest
+local QuestConfig = {
+    QuestEnabled = false, -- Flag para ativar/desativar quest
+    CurrentQuest = nil, -- Quest atual
+    QuestReward = 0 -- Recompensa da quest
+}
 
-function getAllBladeHits(Sizes)
-    local Hits = {}
-    local Client = game.Players.LocalPlayer
-    local Enemies = game:GetService("Workspace").Enemies:GetChildren()
-    for i=1,#Enemies do local v = Enemies[i]
-        local Human = v:FindFirstChildOfClass("Humanoid")
-        if Human and Human.RootPart and Human.Health > 0 and Client:DistanceFromCharacter(Human.RootPart.Position) < Sizes+5 then
-            table.insert(Hits,Human.RootPart)
-        end
-    end
-    return Hits
-end
-
-function AttackFunction()
-    local ac = CombatFrameworkR.activeController
-    if ac and ac.equipped then
-        for indexincrement = 1, 1 do
-            local bladehit = getAllBladeHits(60)
-            if #bladehit > 0 then
-                local AcAttack8 = debug.getupvalue(ac.attack, 5)
-                local AcAttack9 = debug.getupvalue(ac.attack, 6)
-                local AcAttack7 = debug.getupvalue(ac.attack, 4)
-                local AcAttack10 = debug.getupvalue(ac.attack, 7)
-                local NumberAc12 = (AcAttack8 * 798405 + AcAttack7 * 727595) % AcAttack9
-                local NumberAc13 = AcAttack7 * 798405
-                (function()
-                    NumberAc12 = (NumberAc12 * AcAttack9 + NumberAc13) % 1099511627776
-                    AcAttack8 = math.floor(NumberAc12 / AcAttack9)
-                    AcAttack7 = NumberAc12 - AcAttack8 * AcAttack9
-                end)()
-                AcAttack10 = AcAttack10 + 1
-                debug.setupvalue(ac.attack, 5, AcAttack8)
-                debug.setupvalue(ac.attack, 6, AcAttack9)
-                debug.setupvalue(ac.attack, 4, AcAttack7)
-                debug.setupvalue(ac.attack, 7, AcAttack10)
-                for k, v in pairs(ac.animator.anims.basic) do
-                    v:Play(0.01,0.01,0.01)
-                end                 
-                if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") and ac.blades and ac.blades[1] then 
-                    game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("weaponChange",tostring(CurrentWeapon()))
-                    game.ReplicatedStorage.Remotes.Validator:FireServer(math.floor(NumberAc12 / 1099511627776 * 16777215), AcAttack10)
-                    game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("hit", bladehit, indexincrement, "")
-                end
-            end
-        end
-    end
-end
-
--- Sistema de Auto Farm
-function AutoFarm()
-    if not Config.AutoFarm then return end
+-- Função para iniciar o farm
+local function StartFarm()
+    FarmConfig.FarmEnabled = true
+    -- Lógica de farm aqui
+    local Player = game.Players.LocalPlayer
+    local Character = Player.Character
+    local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
     
+    -- Encontrar e atacar mobs
+    local Enemies = workspace.Enemies:GetChildren()
+    for _, Enemy in pairs(Enemies) do
+        if Enemy:FindFirstChild("HumanoidRootPart") and Enemy:FindFirstChild("Humanoid") and Enemy.Humanoid.Health > 0 then
+            repeat
+                wait()
+                
+                -- Auto Haki
+                if Config.AutoHaki and not Character:FindFirstChild("HasBuso") then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+                end
+                
+                -- Bring Mob
+                if Config.BringMob then
+                    Enemy.HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.new(0, 0, -Config.DistanceMob)
+                    Enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                    Enemy.HumanoidRootPart.Transparency = 0.8
+                end
+                
+                -- Attack
+                HumanoidRootPart.CFrame = Enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
+                if Config.FastAttack then
+                    AttackFunction()
+                end
+                
+            until not FarmConfig.FarmEnabled or not Enemy.Parent or Enemy.Humanoid.Health <= 0
+        end
+    end
+end
+
+-- Função para parar o farm
+local function StopFarm()
+    FarmConfig.FarmEnabled = false
+    -- Lógica de parada de farm aqui
+    local Player = game.Players.LocalPlayer
+    local Character = Player.Character
+    local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    
+    -- Parar de atacar inimigos
+    local Enemies = workspace.Enemies:GetChildren()
+    for _, Enemy in pairs(Enemies) do
+        if Enemy:FindFirstChild("HumanoidRootPart") and Enemy:FindFirstChild("Humanoid") and Enemy.Humanoid.Health > 0 then
+            Enemy.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+            Enemy.HumanoidRootPart.Transparency = 0
+        end
+    end
+    
+    -- Retornar o personagem para sua posição original
+    HumanoidRootPart.CFrame = Character.PrimaryPart.CFrame
+end
+
+-- Função para iniciar a quest
+local function StartQuest()
+    QuestConfig.QuestEnabled = true
+    -- Lógica de quest aqui
     local Player = game.Players.LocalPlayer
     local Character = Player.Character
     local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
@@ -429,33 +438,72 @@ function AutoFarm()
                     AttackFunction()
                 end
                 
-            until not Config.AutoFarm or not Enemy.Parent or Enemy.Humanoid.Health <= 0 or not Player.PlayerGui.Main.Quest.Visible
+            until not QuestConfig.QuestEnabled or not Enemy.Parent or Enemy.Humanoid.Health <= 0 or not Player.PlayerGui.Main.Quest.Visible
         end
     end
 end
 
--- Iniciar loops
-spawn(function()
-    while wait() do
-        if Config.FastAttack then
-            AttackFunction()
+-- Função para parar a quest
+local function StopQuest()
+    QuestConfig.QuestEnabled = false
+    -- Lógica de parada de quest aqui
+    local Player = game.Players.LocalPlayer
+    local Character = Player.Character
+    local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    
+    -- Parar de atacar inimigos
+    local Enemies = workspace.Enemies:GetChildren()
+    for _, Enemy in pairs(Enemies) do
+        if Enemy:FindFirstChild("HumanoidRootPart") and Enemy:FindFirstChild("Humanoid") and Enemy.Humanoid.Health > 0 then
+            Enemy.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+            Enemy.HumanoidRootPart.Transparency = 0
         end
     end
-end)
+    
+    -- Retornar o personagem para sua posição original
+    HumanoidRootPart.CFrame = Character.PrimaryPart.CFrame
+end
 
-spawn(function()
-    while wait() do
-        pcall(function()
-            AutoFarm()
-        end)
+-- Criar botões de farm e quest na interface
+local FarmButton = Interface.CreateTab("Farm")
+FarmButton.MouseButton1Click:Connect(function()
+    if FarmConfig.FarmEnabled then
+        StopFarm()
+    else
+        StartFarm()
     end
 end)
 
--- Adicionar toggles na interface
-local AutoFarmToggle = CreateToggle(MainPage, "Auto Farm", "AutoFarm")
-local FastAttackToggle = CreateToggle(MainPage, "Fast Attack", "FastAttack")
-local AutoHakiToggle = CreateToggle(MainPage, "Auto Buso", "AutoHaki")
-local BringMobToggle = CreateToggle(MainPage, "Bring Mob", "BringMob")
+local QuestButton = Interface.CreateTab("Quest")
+QuestButton.MouseButton1Click:Connect(function()
+    if QuestConfig.QuestEnabled then
+        StopQuest()
+    else
+        StartQuest()
+    end
+end)
+
+-- Atualizar o status dos botões de farm e quest
+local function UpdateFarmQuestStatus()
+    if FarmConfig.FarmEnabled then
+        FarmButton.BackgroundColor3 = Interface.UIConfig.MainColor
+    else
+        FarmButton.BackgroundColor3 = Interface.UIConfig.AccentColor
+    end
+
+    if QuestConfig.QuestEnabled then
+        QuestButton.BackgroundColor3 = Interface.UIConfig.MainColor
+    else
+        QuestButton.BackgroundColor3 = Interface.UIConfig.AccentColor
+    end
+end
+
+-- Loop principal
+while true do
+    wait(1)
+    UpdateFarmQuestStatus()
+    -- Lógica de farm e quest aqui
+end
 
 -- Blox Fruits Ultimate Script (Parte 3/10)
 -- Sistemas de Raids e Dungeons
