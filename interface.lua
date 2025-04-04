@@ -77,20 +77,8 @@ SwordSection:NewToggle("Auto Pole", "", function(state)
     getgenv().AutoPole = state
 end)
 
-SwordSection:NewToggle("Auto Triple Katana", "", function(state)
-    getgenv().AutoTripleKatana = state
-end)
-
 -- Quest Section
 local QuestSection = Quest:NewSection("Special Quests")
-QuestSection:NewToggle("Auto Shanks Quest", "", function(state)
-    getgenv().AutoShanks = state
-end)
-
-QuestSection:NewToggle("Auto Ken Haki Quest", "", function(state)
-    getgenv().AutoKenQuest = state
-end)
-
 QuestSection:NewToggle("Auto Bartilo Quest", "", function(state)
     getgenv().AutoBartilo = state
 end)
@@ -103,10 +91,6 @@ end)
 
 FruitSection:NewToggle("Auto Store Fruit", "", function(state)
     getgenv().AutoStoreFruit = state
-end)
-
-FruitSection:NewToggle("Auto Buy Devil Fruit", "", function(state)
-    getgenv().AutoBuyFruit = state
 end)
 
 -- Teleport Section
@@ -142,26 +126,10 @@ RaidSection:NewToggle("Auto Raid", "", function(state)
     getgenv().AutoRaid = state
 end)
 
-RaidSection:NewToggle("Auto Buy Chip", "", function(state)
-    getgenv().AutoBuyChip = state
-end)
-
-RaidSection:NewDropdown("Select Raid", "", {"Flame", "Ice", "Quake", "Light", "Dark", "String", "Rumble", "Magma", "Human: Buddha", "Sand", "Bird: Phoenix", "Dough"}, function(currentOption)
-    getgenv().SelectedRaid = currentOption
-end)
-
 -- Shop Section
 local ShopSection = Shop:NewSection("Auto Buy")
 ShopSection:NewToggle("Auto Buy Combat", "", function(state)
     getgenv().AutoBuyCombat = state
-end)
-
-ShopSection:NewToggle("Auto Buy Abilities", "", function(state)
-    getgenv().AutoBuyAbilities = state
-end)
-
-ShopSection:NewToggle("Auto Buy Legendary Sword", "", function(state)
-    getgenv().AutoBuyLegendary = state
 end)
 
 -- Misc Section
@@ -174,20 +142,170 @@ MiscSection:NewToggle("Anti AFK", "", function(state)
     getgenv().AntiAFK = state
 end)
 
-MiscSection:NewToggle("Remove Fog", "", function(state)
-    getgenv().NoFog = state
-end)
-
-MiscSection:NewKeybind("Toggle UI", "Hide/Show UI", Enum.KeyCode.RightControl, function()
-    Library:ToggleUI()
-end)
-
--- Settings Section
-local SettingsSection = Misc:NewSection("Settings")
-SettingsSection:NewSlider("Tween Speed", "", 500, 50, function(value)
+MiscSection:NewSlider("Tween Speed", "", 500, 50, function(value)
     getgenv().TweenSpeed = value
 end)
+```
 
-SettingsSection:NewColorPicker("UI Color", "", Color3.fromRGB(255,255,255), function(color)
-    -- Atualizar cor da UI
+2. `funcoes.lua` (todas as funções que executam as ações):
+```lua
+-- Variáveis Globais
+getgenv().AutoFarm = false
+getgenv().TweenSpeed = 250
+
+-- Serviços
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+
+-- Quest Data
+local QuestData = {
+    ["1-9"] = {
+        Monster = "Bandit [Lv. 5]",
+        Quest = "BanditQuest1",
+        QuestLv = 1,
+        CFrameQuest = CFrame.new(1061.66699, 16.5166187, 1544.52905),
+        CFrameMon = CFrame.new(1199.31287, 52.2717781, 1536.91516)
+    },
+    -- Adicione mais quests aqui
+}
+
+-- Island Data
+local IslandCFrames = {
+    ["Starter Island"] = CFrame.new(1071.2832, 16.3085976, 1426.86792),
+    ["Marine Island"] = CFrame.new(-2566.4296875, 6.8556680679321, 2045.2561035156),
+    -- Adicione mais ilhas aqui
+}
+
+-- Função Tween
+function Tween(targetCFrame)
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local humanoidRootPart = LocalPlayer.Character.HumanoidRootPart
+    local distance = (targetCFrame.Position - humanoidRootPart.Position).Magnitude
+    
+    local tweenInfo = TweenInfo.new(
+        distance/getgenv().TweenSpeed,
+        Enum.EasingStyle.Linear
+    )
+    
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    
+    return tween
+end
+
+-- Auto Farm Function
+spawn(function()
+    while true do
+        if getgenv().AutoFarm then
+            pcall(function()
+                -- Código do Auto Farm aqui
+            end)
+        end
+        wait()
+    end
 end)
+
+-- Auto Stats Functions
+for _, stat in ipairs({"Melee", "Defense", "Sword", "Gun", "Devil Fruit"}) do
+    spawn(function()
+        while true do
+            if getgenv()["Auto" .. stat] then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AddPoint", stat, 1)
+            end
+            wait(0.1)
+        end
+    end)
+end
+
+-- Teleport Function
+function TeleportToIsland()
+    if IslandCFrames[getgenv().SelectedIsland] then
+        Tween(IslandCFrames[getgenv().SelectedIsland])
+    end
+end
+
+-- Anti AFK
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+-- Server Hop Function
+function HopServer()
+    local PlaceID = game.PlaceId
+    local AllIDs = {}
+    local foundAnything = ""
+    local actualHour = os.date("!*t").hour
+    local Deleted = false
+
+    local File = pcall(function()
+        AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
+    end)
+    if not File then
+        table.insert(AllIDs, actualHour)
+        writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+    end
+    
+    function TPReturner()
+        local Site;
+        if foundAnything == "" then
+            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+        else
+            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+        end
+        local ID = ""
+        if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+            foundAnything = Site.nextPageCursor
+        end
+        local num = 0;
+        for i,v in pairs(Site.data) do
+            local Possible = true
+            ID = tostring(v.id)
+            if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                for _,Existing in pairs(AllIDs) do
+                    if num ~= 0 then
+                        if ID == tostring(Existing) then
+                            Possible = false
+                        end
+                    else
+                        if tonumber(actualHour) ~= tonumber(Existing) then
+                            local delFile = pcall(function()
+                                delfile("NotSameServers.json")
+                                AllIDs = {}
+                                table.insert(AllIDs, actualHour)
+                            end)
+                        end
+                    end
+                    num = num + 1
+                end
+                if Possible == true then
+                    table.insert(AllIDs, ID)
+                    wait()
+                    pcall(function()
+                        writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+                        wait()
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                    end)
+                    wait(4)
+                end
+            end
+        end
+    end
+
+    function Teleport()
+        while wait() do
+            pcall(function()
+                TPReturner()
+                if foundAnything ~= "" then
+                    TPReturner()
+                end
+            end)
+        end
+    end
+
+    Teleport()
+end
