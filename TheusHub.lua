@@ -6,7 +6,7 @@ local TS = game:GetService("TweenService")
 local RS = game:GetService("ReplicatedStorage")
 local WS = game:GetService("Workspace")
 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/TheusHub/main/main.lua"))()
 local window = library.CreateLib("Blox Fruits Script", "DarkTheme")
 
 -- Auto Farm
@@ -180,7 +180,7 @@ hakiSection:NewToggle("Auto Buy Haki", "Automatically buys Haki", function(state
     getgenv().autoHaki = state
     while autoHaki do
         task.wait()
-        pcall(function()
+        pcall(function())
             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki")
         end)
     end
@@ -194,7 +194,7 @@ miscSection:NewToggle("Anti-Kick", "Prevents being kicked", function(state)
     getgenv().antiKick = state
     if antiKick then
         player.OnTeleport:Connect(function()
-            queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/your-repo/main.lua'))()")
+            queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/Yuzure-sudo/TheusHub/main/main.lua'))()")
         end)
     end
 end)
