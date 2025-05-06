@@ -1,194 +1,176 @@
--- Delta Theus Hub Premium V1
-local Delta = loadstring(game:HttpGet("https://raw.githubusercontent.com/DeltaHubDevs/Delta/main/Source.lua"))()
+-- Theus Hub Premium V2
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
-local Window = Delta:CreateWindow({
-    Title = "Theus Hub Premium",
-    SubTitle = "by Theus",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(550, 350),
-    Acrylic = true,
-    Theme = "Dark"
+local Window = Rayfield:CreateWindow({
+   Name = "Theus Hub Premium",
+   LoadingTitle = "Theus Hub Premium V2",
+   LoadingSubtitle = "by Theus",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "TheusHubPremium",
+      FileName = "Config"
+   }
 })
 
--- Tabs
-local MainTab = Window:CreateTab("Principal", "rbxassetid://4483345998")
-local CombatTab = Window:CreateTab("Combate", "rbxassetid://7733674079")
-local VisualsTab = Window:CreateTab("Visual", "rbxassetid://4483362458")
-local VehicleTab = Window:CreateTab("Veículos", "rbxassetid://4483364237")
-local TrollTab = Window:CreateTab("Troll", "rbxassetid://4483345998")
-
--- Variáveis
+-- Serviços
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Seção Principal
-local MainSection = MainTab:CreateSection("Modificadores")
+-- Tabs
+local MainTab = Window:CreateTab("Principal")
+local PlayerTab = Window:CreateTab("Jogador")
+local VehicleTab = Window:CreateTab("Veículos")
+local TeleportTab = Window:CreateTab("Teleporte")
 
-MainSection:CreateSlider({
-    Name = "WalkSpeed",
-    Min = 16,
-    Max = 500,
-    Default = 16,
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(Value)
-        LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
-})
-
-MainSection:CreateSlider({
-    Name = "JumpPower",
-    Min = 50,
-    Max = 500,
-    Default = 50,
-    Increment = 1,
-    ValueName = "Power",
-    Callback = function(Value)
-        LocalPlayer.Character.Humanoid.JumpPower = Value
-    end
-})
-
-MainSection:CreateButton({
-    Name = "Infinite Jump",
-    Callback = function()
-        local InfiniteJumpEnabled = true
-        UserInputService.JumpRequest:Connect(function()
-            if InfiniteJumpEnabled then
-                LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
-            end
-        end)
-    end
-})
-
--- Seção de Combate
-local CombatSection = CombatTab:CreateSection("Recursos de Combate")
-
-local function getClosestPlayer()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude
-            if distance < shortestDistance then
-                closestPlayer = player
-                shortestDistance = distance
-            end
+-- Sistema de Cópia de Jogador
+local function copyCharacterAppearance(player)
+    if player.Character then
+        local appearance = player.Character:FindFirstChild("Appearance")
+        if appearance then
+            local args = {
+                [1] = "LoadAppearance",
+                [2] = appearance:GetChildren()
+            }
+            ReplicatedStorage.RemoteEvents.Character:FireServer(unpack(args))
         end
     end
-    
-    return closestPlayer
 end
 
-CombatSection:CreateToggle({
-    Name = "Hitbox Expander",
-    Default = false,
-    Callback = function(Value)
-        _G.HitboxEnabled = Value
-        while _G.HitboxEnabled do
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    if player.Character:FindFirstChild("HumanoidRootPart") then
-                        player.Character.HumanoidRootPart.Size = Vector3.new(10, 10, 10)
-                        player.Character.HumanoidRootPart.Transparency = 0.5
-                    end
-                end
-            end
-            wait(1)
-        end
-    end
-})
-
--- Seção Visual
-local VisualSection = VisualsTab:CreateSection("ESP")
-
-VisualSection:CreateToggle({
-    Name = "Player ESP",
-    Default = false,
-    Callback = function(Value)
-        _G.ESPEnabled = Value
-        while _G.ESPEnabled do
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    if not player.Character:FindFirstChild("Highlight") then
-                        local highlight = Instance.new("Highlight")
-                        highlight.Parent = player.Character
-                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    end
-                end
-            end
-            wait(1)
-        end
-        
-        if not _G.ESPEnabled then
-            for _, player in pairs(Players:GetPlayers()) do
-                if player.Character then
-                    local highlight = player.Character:FindFirstChild("Highlight")
-                    if highlight then highlight:Destroy() end
-                end
-            end
-        end
-    end
-})
-
--- Seção de Veículos
-local VehicleSection = VehicleTab:CreateSection("Modificadores de Veículos")
-
-VehicleSection:CreateButton({
-    Name = "Spawn Carro",
-    Callback = function()
+local function copyOutfit(player)
+    if player.Character then
         local args = {
-            [1] = "SpawnVehicle",
-            [2] = "Vehicle1"
+            [1] = "LoadOutfit",
+            [2] = player.Character:GetChildren()
         }
-        game:GetService("ReplicatedStorage").RemoteEvent:FireServer(unpack(args))
+        ReplicatedStorage.RemoteEvents.Character:FireServer(unpack(args))
     end
-})
+end
 
-VehicleSection:CreateToggle({
-    Name = "Veículo Voador",
-    Default = false,
+local function copyAnimation(player)
+    if player.Character and player.Character:FindFirstChild("Animate") then
+        local args = {
+            [1] = "LoadAnimation",
+            [2] = player.Character.Animate:GetChildren()
+        }
+        ReplicatedStorage.RemoteEvents.Character:FireServer(unpack(args))
+    end
+end
+
+-- Seção Principal
+local PlayerSection = MainTab:CreateSection("Copiar Jogador")
+
+local PlayerDropdown = MainTab:CreateDropdown({
+    Name = "Selecionar Jogador",
+    Options = {},
+    CurrentOption = "",
+    Flag = "PlayerDropdown",
     Callback = function(Value)
-        _G.VehicleFly = Value
-        while _G.VehicleFly do
-            local vehicle = LocalPlayer.Character:FindFirstChild("Humanoid").SeatPart
-            if vehicle then
-                local bf = vehicle:FindFirstChild("BodyForce")
-                if not bf then
-                    bf = Instance.new("BodyForce")
-                    bf.Parent = vehicle
-                end
-                bf.Force = Vector3.new(0, vehicle:GetMass() * workspace.Gravity, 0)
-            end
-            wait()
+        local selectedPlayer = Players:FindFirstChild(Value)
+        if selectedPlayer then
+            copyCharacterAppearance(selectedPlayer)
+            copyOutfit(selectedPlayer)
+            copyAnimation(selectedPlayer)
         end
     end
 })
 
--- Seção Troll
-local TrollSection = TrollTab:CreateSection("Funções Troll")
-
-TrollSection:CreateButton({
-    Name = "Fling All",
-    Callback = function()
-        local oldPos = LocalPlayer.Character.HumanoidRootPart.CFrame
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
-                if targetRoot then
-                    for i = 1, 3 do
-                        LocalPlayer.Character.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 0)
-                        wait(0.1)
-                    end
-                end
-            end
+-- Atualizar lista de jogadores
+local function updatePlayerList()
+    local playerNames = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerNames, player.Name)
         end
-        LocalPlayer.Character.HumanoidRootPart.CFrame = oldPos
+    end
+    PlayerDropdown:Refresh(playerNames)
+end
+
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+updatePlayerList()
+
+-- Modificadores de Jogador
+local function modifyCharacter(property, value)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid[property] = value
+    end
+end
+
+PlayerTab:CreateSlider({
+    Name = "Velocidade",
+    Range = {16, 500},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Flag = "SpeedSlider",
+    Callback = function(Value)
+        modifyCharacter("WalkSpeed", Value)
     end
 })
+
+PlayerTab:CreateSlider({
+    Name = "Pulo",
+    Range = {50, 500},
+    Increment = 1,
+    Suffix = "Jump",
+    CurrentValue = 50,
+    Flag = "JumpSlider",
+    Callback = function(Value)
+        modifyCharacter("JumpPower", Value)
+    end
+})
+
+-- Sistema de Veículos
+local function spawnVehicle(vehicleType)
+    local args = {
+        [1] = "SpawnVehicle",
+        [2] = vehicleType
+    }
+    ReplicatedStorage.RemoteEvents.Vehicle:FireServer(unpack(args))
+end
+
+local vehicles = {
+    "Ambulance",
+    "PoliceCar",
+    "Taxi",
+    "Bus",
+    "Helicopter",
+    "Motorcycle",
+    "Bicycle",
+    "Boat"
+}
+
+for _, vehicle in ipairs(vehicles) do
+    VehicleTab:CreateButton({
+        Name = "Spawnar " .. vehicle,
+        Callback = function()
+            spawnVehicle(vehicle)
+        end
+    })
+end
+
+-- Sistema de Teleporte
+local locations = {
+    ["Banco"] = CFrame.new(-377, 21, 1163),
+    ["Hospital"] = CFrame.new(-816, 21, 1602),
+    ["Escola"] = CFrame.new(-636, 21, 1107),
+    ["Shopping"] = CFrame.new(-379, 21, 1868),
+    ["Delegacia"] = CFrame.new(-193, 21, 1627),
+    ["Cinema"] = CFrame.new(-1005, 21, 1289)
+}
+
+for name, position in pairs(locations) do
+    TeleportTab:CreateButton({
+        Name = name,
+        Callback = function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = position
+            end
+        end
+    })
+end
 
 -- Anti AFK
 local VirtualUser = game:GetService('VirtualUser')
@@ -198,26 +180,46 @@ LocalPlayer.Idled:connect(function()
     VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
--- Notificação de Inicialização
-Delta:Notify({
-    Title = "Theus Hub Premium",
-    Content = "Script carregado com sucesso!",
-    Duration = 6.5
+-- Funções Adicionais do Ice Hub
+MainTab:CreateToggle({
+    Name = "Noclip",
+    CurrentValue = false,
+    Flag = "NoclipToggle",
+    Callback = function(Value)
+        if Value then
+            RunService:BindToRenderStep("Noclip", 0, function()
+                if LocalPlayer.Character then
+                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            RunService:UnbindFromRenderStep("Noclip")
+        end
+    end
 })
 
--- Auto-Update Check
-local function checkUpdate()
-    local success, result = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/Yuzure-sudo/TheusHub/main/version.txt")
-    end)
-    
-    if success and result ~= "1.0" then
-        Delta:Notify({
-            Title = "Atualização Disponível",
-            Content = "Nova versão do Theus Hub disponível!",
-            Duration = 6.5
-        })
+MainTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfJumpToggle",
+    Callback = function(Value)
+        _G.InfiniteJump = Value
+        game:GetService("UserInputService").JumpRequest:connect(function()
+            if _G.InfiniteJump then
+                LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
+            end
+        end)
     end
-end
+})
 
-checkUpdate()
+-- Notificação de Inicialização
+Rayfield:Notify({
+    Title = "Theus Hub Premium",
+    Content = "Script carregado com sucesso!",
+    Duration = 6.5,
+    Image = 4483362458,
+})
