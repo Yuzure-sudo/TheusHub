@@ -1,255 +1,255 @@
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+-- Configuração Inicial
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local LocalPlayer = Players.LocalPlayer
 
--- Interface
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FlyGui"
-ScreenGui.Parent = game.CoreGui
+-- Tela de Carregamento
+local LoadingScreen = Instance.new("ScreenGui")
+local LoadingFrame = Instance.new("Frame")
+local LoadingBar = Instance.new("Frame")
+local LoadingText = Instance.new("TextLabel")
+local Logo = Instance.new("ImageLabel")
 
--- Painel Principal
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 200, 0, 250)
-MainFrame.Position = UDim2.new(0.85, 0, 0.3, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = ScreenGui
+LoadingScreen.Name = "LoadingScreen"
+LoadingScreen.Parent = game.CoreGui
 
--- Arredondamento do Painel
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0.05, 0)
-UICorner.Parent = MainFrame
+LoadingFrame.Name = "LoadingFrame"
+LoadingFrame.Parent = LoadingScreen
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
 
--- Título
-local Title = Instance.new("TextLabel")
-Title.Name = "Title"
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 20
-Title.Font = Enum.Font.GothamBold
-Title.Text = "Fly Mobile"
-Title.Parent = MainFrame
+Logo.Name = "Logo"
+Logo.Parent = LoadingFrame
+Logo.BackgroundTransparency = 1
+Logo.Position = UDim2.new(0.5, -100, 0.4, -100)
+Logo.Size = UDim2.new(0, 200, 0, 200)
+Logo.Image = "rbxassetid://7743878358"
 
--- Arredondamento do Título
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0.05, 0)
-TitleCorner.Parent = Title
+LoadingBar.Name = "LoadingBar"
+LoadingBar.Parent = LoadingFrame
+LoadingBar.BackgroundColor3 = Color3.fromRGB(45, 180, 255)
+LoadingBar.BorderSizePixel = 0
+LoadingBar.Position = UDim2.new(0.3, 0, 0.6, 0)
+LoadingBar.Size = UDim2.new(0, 0, 0, 5)
 
--- Botão Toggle
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Name = "ToggleButton"
-ToggleButton.Size = UDim2.new(0.8, 0, 0, 40)
-ToggleButton.Position = UDim2.new(0.1, 0, 0.2, 0)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 180, 255)
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.TextSize = 18
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.Text = "Ativar Fly"
-ToggleButton.Parent = MainFrame
+LoadingText.Name = "LoadingText"
+LoadingText.Parent = LoadingFrame
+LoadingText.BackgroundTransparency = 1
+LoadingText.Position = UDim2.new(0, 0, 0.7, 0)
+LoadingText.Size = UDim2.new(1, 0, 0, 50)
+LoadingText.Font = Enum.Font.GothamBold
+LoadingText.Text = "Carregando..."
+LoadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadingText.TextSize = 24
 
--- Arredondamento do Botão Toggle
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0.2, 0)
-ToggleCorner.Parent = ToggleButton
+-- Animação de Carregamento
+local function LoadAnimation()
+    for i = 1, 100 do
+        LoadingBar:TweenSize(
+            UDim2.new(0.4 * (i/100), 0, 0, 5),
+            Enum.EasingDirection.Out,
+            Enum.EasingStyle.Linear,
+            0.01,
+            true
+        )
+        LoadingText.Text = "Carregando... " .. i .. "%"
+        wait(0.02)
+    end
+    wait(0.5)
+    LoadingScreen:Destroy()
+end
 
--- Slider de Velocidade
-local SpeedFrame = Instance.new("Frame")
-SpeedFrame.Name = "SpeedFrame"
-SpeedFrame.Size = UDim2.new(0.8, 0, 0, 40)
-SpeedFrame.Position = UDim2.new(0.1, 0, 0.4, 0)
-SpeedFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-SpeedFrame.Parent = MainFrame
+-- Interface Principal
+local Window = OrionLib:MakeWindow({
+    Name = "Ultimate Hub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "UltimateConfig",
+    IntroEnabled = true,
+    IntroText = "Ultimate Hub"
+})
 
-local SpeedSlider = Instance.new("TextButton")
-SpeedSlider.Name = "SpeedSlider"
-SpeedSlider.Size = UDim2.new(0.5, 0, 1, 0)
-SpeedSlider.BackgroundColor3 = Color3.fromRGB(45, 180, 255)
-SpeedSlider.Text = ""
-SpeedSlider.Parent = SpeedFrame
+-- Tabs
+local PlayerTab = Window:MakeTab({
+    Name = "Player",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Arredondamento do Slider
-local SliderCorner = Instance.new("UICorner")
-SliderCorner.CornerRadius = UDim.new(0.2, 0)
-SliderCorner.Parent = SpeedFrame
+local CombatTab = Window:MakeTab({
+    Name = "Combat",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-local SliderButtonCorner = Instance.new("UICorner")
-SliderButtonCorner.CornerRadius = UDim.new(0.2, 0)
-SliderButtonCorner.Parent = SpeedSlider
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Texto da Velocidade
-local SpeedText = Instance.new("TextLabel")
-SpeedText.Name = "SpeedText"
-SpeedText.Size = UDim2.new(1, 0, 0, 20)
-SpeedText.Position = UDim2.new(0, 0, 0.6, 0)
-SpeedText.BackgroundTransparency = 1
-SpeedText.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedText.TextSize = 16
-SpeedText.Font = Enum.Font.GothamBold
-SpeedText.Text = "Velocidade: 50"
-SpeedText.Parent = MainFrame
-
--- Controles de Direção
-local ControlsFrame = Instance.new("Frame")
-ControlsFrame.Name = "ControlsFrame"
-ControlsFrame.Size = UDim2.new(0.8, 0, 0.3, 0)
-ControlsFrame.Position = UDim2.new(0.1, 0, 0.7, 0)
-ControlsFrame.BackgroundTransparency = 1
-ControlsFrame.Parent = MainFrame
-
--- Variáveis de Controle
-local Flying = false
-local Speed = 50
-local TouchStartPosition = nil
-local LastTouchPosition = nil
+local AvatarTab = Window:MakeTab({
+    Name = "Avatar",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
 -- Funções
-local function StartFlying()
-    local BodyVelocity = Instance.new("BodyVelocity")
-    BodyVelocity.Name = "FlyVelocity"
-    BodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    BodyVelocity.Parent = HumanoidRootPart
-    
-    local BodyGyro = Instance.new("BodyGyro")
-    BodyGyro.Name = "FlyGyro"
-    BodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    BodyGyro.P = 9000
-    BodyGyro.Parent = HumanoidRootPart
-    
-    Humanoid.PlatformStand = true
-end
-
-local function StopFlying()
-    if HumanoidRootPart:FindFirstChild("FlyVelocity") then
-        HumanoidRootPart.FlyVelocity:Destroy()
-    end
-    if HumanoidRootPart:FindFirstChild("FlyGyro") then
-        HumanoidRootPart.FlyGyro:Destroy()
-    end
-    Humanoid.PlatformStand = false
-end
-
--- Eventos
-ToggleButton.MouseButton1Click:Connect(function()
-    Flying = not Flying
-    if Flying then
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        ToggleButton.Text = "Desativar Fly"
-        StartFlying()
-    else
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 180, 255)
-        ToggleButton.Text = "Ativar Fly"
-        StopFlying()
-    end
-end)
-
--- Controle de Velocidade
-local DraggingSpeed = false
-
-SpeedSlider.MouseButton1Down:Connect(function()
-    DraggingSpeed = true
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        DraggingSpeed = false
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if DraggingSpeed and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local sliderPosition = math.clamp((input.Position.X - SpeedFrame.AbsolutePosition.X) / SpeedFrame.AbsoluteSize.X, 0, 1)
-        SpeedSlider.Size = UDim2.new(sliderPosition, 0, 1, 0)
-        Speed = math.floor(sliderPosition * 100)
-        SpeedText.Text = "Velocidade: " .. Speed
-    end
-end)
-
--- Controles Mobile
-UserInputService.TouchStarted:Connect(function(touch)
-    TouchStartPosition = touch.Position
-    LastTouchPosition = touch.Position
-end)
-
-UserInputService.TouchMoved:Connect(function(touch)
-    if Flying and TouchStartPosition then
-        local delta = touch.Position - LastTouchPosition
-        LastTouchPosition = touch.Position
+local function CopyCharacter(targetPlayer)
+    local character = targetPlayer.Character
+    if character then
+        -- Copiar aparência
+        local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            local targetHumanoid = character:FindFirstChild("Humanoid")
+            if targetHumanoid then
+                humanoid:Clone():Destroy()
+                local newHumanoid = targetHumanoid:Clone()
+                newHumanoid.Parent = LocalPlayer.Character
+            end
+        end
         
-        local character = Player.Character
-        if character then
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
-                local flyVelocity = humanoidRootPart:FindFirstChild("FlyVelocity")
-                if flyVelocity then
-                    local camera = workspace.CurrentCamera
-                    local lookVector = camera.CFrame.LookVector
-                    local rightVector = camera.CFrame.RightVector
-                    
-                    local moveDirection = Vector3.new(
-                        delta.X / 10,
-                        delta.Y / -10,
-                        0
-                    )
-                    
-                    flyVelocity.Velocity = moveDirection * Speed
-                end
+        -- Copiar acessórios
+        for _, accessory in pairs(character:GetChildren()) do
+            if accessory:IsA("Accessory") then
+                local clone = accessory:Clone()
+                clone.Parent = LocalPlayer.Character
             end
+        end
+    end
+end
+
+-- Player Tab
+PlayerTab:AddSlider({
+    Name = "WalkSpeed",
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Color = Color3.fromRGB(45, 180, 255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end    
+})
+
+PlayerTab:AddSlider({
+    Name = "JumpPower",
+    Min = 50,
+    Max = 500,
+    Default = 50,
+    Color = Color3.fromRGB(45, 180, 255),
+    Increment = 1,
+    ValueName = "Power",
+    Callback = function(Value)
+        LocalPlayer.Character.Humanoid.JumpPower = Value
+    end    
+})
+
+-- Combat Tab
+local function KillPlayer(player)
+    local character = player.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Health = 0
+        end
+    end
+end
+
+CombatTab:AddDropdown({
+    Name = "Select Player",
+    Default = "",
+    Options = {},
+    Callback = function(Value)
+        _G.SelectedPlayer = Value
+    end    
+})
+
+CombatTab:AddButton({
+    Name = "Kill Selected Player",
+    Callback = function()
+        if _G.SelectedPlayer then
+            local player = Players:FindFirstChild(_G.SelectedPlayer)
+            if player then
+                KillPlayer(player)
+            end
+        end
+    end    
+})
+
+-- Misc Tab
+MiscTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(Value)
+        _G.InfiniteJump = Value
+        game:GetService("UserInputService").JumpRequest:connect(function()
+            if _G.InfiniteJump then
+                LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
+            end
+        end)
+    end    
+})
+
+MiscTab:AddToggle({
+    Name = "NoClip",
+    Default = false,
+    Callback = function(Value)
+        _G.NoClip = Value
+        game:GetService('RunService').Stepped:connect(function()
+            if _G.NoClip then
+                LocalPlayer.Character.Humanoid:ChangeState(11)
+            end
+        end)
+    end    
+})
+
+-- Avatar Tab
+local playerList = {}
+for _, player in pairs(Players:GetPlayers()) do
+    table.insert(playerList, player.Name)
+end
+
+AvatarTab:AddDropdown({
+    Name = "Select Player to Copy",
+    Default = "",
+    Options = playerList,
+    Callback = function(Value)
+        local player = Players:FindFirstChild(Value)
+        if player then
+            CopyCharacter(player)
+        end
+    end    
+})
+
+-- Atualizar lista de jogadores
+Players.PlayerAdded:Connect(function(player)
+    table.insert(playerList, player.Name)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    for i, name in ipairs(playerList) do
+        if name == player.Name then
+            table.remove(playerList, i)
+            break
         end
     end
 end)
 
-UserInputService.TouchEnded:Connect(function(touch)
-    if Flying then
-        local character = Player.Character
-        if character then
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
-                local flyVelocity = humanoidRootPart:FindFirstChild("FlyVelocity")
-                if flyVelocity then
-                    flyVelocity.Velocity = Vector3.new(0, 0, 0)
-                end
-            end
-        end
-    end
-    TouchStartPosition = nil
-    LastTouchPosition = nil
-end)
+-- Notificações
+OrionLib:MakeNotification({
+    Name = "Ultimate Hub",
+    Content = "Script carregado com sucesso!",
+    Image = "rbxassetid://4483345998",
+    Time = 5
+})
 
--- Dragging da Interface
-local Dragging = false
-local DragStart = nil
-local StartPos = nil
+-- Iniciar animação de carregamento
+LoadAnimation()
 
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        Dragging = true
-        DragStart = input.Position
-        StartPos = MainFrame.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - DragStart
-        MainFrame.Position = UDim2.new(
-            StartPos.X.Scale,
-            StartPos.X.Offset + delta.X,
-            StartPos.Y.Scale,
-            StartPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        Dragging = false
-    end
-end)
+-- Configurações de UI Mobile
+if game:GetService("UserInputService").TouchEnabled then
+    -- Ajustes específicos para mobile
+    Window.Size = UDim2.new(0, 300, 0, 400)
+end
