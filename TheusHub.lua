@@ -1,57 +1,81 @@
-local player = game.Players.LocalPlayer
+-- Script de Fly para Roblox Mobile com Noclip
+
+-- Configurações
+local FLY_KEY = Enum.KeyCode.E -- Tecla para ativar/desativar o voo
+local NOCLIP_KEY = Enum.KeyCode.Q -- Tecla para ativar/desativar o noclip
+local FLY_SPEED = 1 -- Velocidade de voo (ajuste conforme necessário)
+
+-- Variáveis locais
+local player = game:GetService("Players").LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 local flying = false
-local speed = 50
+local noclip = false
 
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 100, 0, 50)
-button.Position = UDim2.new(0.05, 0, 0.85, 0)
-button.Text = "Fly"
-button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-button.TextColor3 = Color3.new(1,1,1)
-button.Parent = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
-
-local bodyGyro, bodyVelocity
-
-local function startFlying()
-	local character = player.Character
-	local hrp = character:WaitForChild("HumanoidRootPart")
-
-	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.P = 9e4
-	bodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-	bodyGyro.CFrame = hrp.CFrame
-	bodyGyro.Parent = hrp
-
-	bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.velocity = Vector3.new(0,0,0)
-	bodyVelocity.maxForce = Vector3.new(9e9, 9e9, 9e9)
-	bodyVelocity.Parent = hrp
-
-	flying = true
-
-	RunService.RenderStepped:Connect(function()
-		if flying then
-			local cam = workspace.CurrentCamera
-			bodyVelocity.velocity = cam.CFrame.LookVector * speed
-			bodyGyro.CFrame = cam.CFrame
-		end
-	end)
+-- Função para alternar o estado de voo
+local function toggleFly()
+    flying = not flying
+    humanoid.PlatformStand = flying
 end
 
-local function stopFlying()
-	flying = false if bodyGyro then bodyGyro:Destroy() end
-	if bodyVelocity then bodyVelocity:Destroy() end
+-- Função para alternar o estado de noclip
+local function toggleNoclip()
+    noclip = not noclip
+    if noclip then
+        -- Desabilita colisões para todas as partes do personagem
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    else
+        -- Reabilita colisões para todas as partes do personagem (pode precisar de ajustes dependendo do jogo)
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
 end
 
-button.MouseButton1Click:Connect(function()
-	if flying then
-		stopFlying()
-		button.Text = "Fly"
-	else
-		startFlying()
-		button.Text = "Stop"
-	end
+-- Conecta a função aos eventos de input do usuário
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.E then
+        toggleFly()
+    elseif input.KeyCode == Enum.KeyCode.Q then
+        toggleNoclip()
+    end
+end)
+
+-- Mantém o personagem voando enquanto o modo de voo está ativo
+game:GetService("RunService").RenderStepped:Connect(function()
+    if flying and humanoid and humanoid.RootPart then
+        local cameraDirection = workspace.CurrentCamera.CFrame.LookVector
+        local moveDirection = Vector3.new(0, 0, 0)
+
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
+            moveDirection = moveDirection + Vector3.new(cameraDirection.X, 0, cameraDirection.Z).Unit
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
+            moveDirection = moveDirection - Vector3.new(cameraDirection.X, 0, cameraDirection.Z).Unit
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
+            moveDirection = moveDirection - workspace.CurrentCamera.CFrame.RightVector
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
+            moveDirection = moveDirection + workspace.CurrentCamera.CFrame.RightVector
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then
+            moveDirection = moveDirection + Vector3.new(0, 1, 0)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftControl) or game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.RightControl) then
+            moveDirection = moveDirection - Vector3.new(0, 1, 0)
+        end
+
+        if moveDirection.Magnitude > 0 then
+            moveDirection = moveDirection.Unit
+        end
+
+        humanoid.RootPart.Velocity = moveDirection * FLY_SPEED
+    end
 end)
