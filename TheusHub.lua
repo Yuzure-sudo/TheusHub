@@ -1,172 +1,128 @@
--- Simple Wirtz Script - Sea 1 Blox Fruits
+-- Script ultra básico para Blox Fruits Sea 1
+-- Testar função por função para identificar o problema
 
 local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local VirtualUser = game:GetService("VirtualUser")
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
+print("Script iniciado")
 
--- SETTINGS
+-- Criar uma interface básica
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TestScriptGui"
+ScreenGui.Parent = Player.PlayerGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+local AutoFarmButton = Instance.new("TextButton")
+AutoFarmButton.Size = UDim2.new(0, 180, 0, 40)
+AutoFarmButton.Position = UDim2.new(0.5, -90, 0.5, -20)
+AutoFarmButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+AutoFarmButton.Text = "Auto Farm: OFF"
+AutoFarmButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoFarmButton.Font = Enum.Font.SourceSansBold
+AutoFarmButton.TextSize = 18
+AutoFarmButton.Parent = Frame
+
+print("UI criada")
+
+-- Variáveis de controle
 local AutoFarmEnabled = false
-local KillAuraEnabled = false
-local NoClipEnabled = false
+local AutoFarmLoop = nil
 
--- CHECK SEA1 MAP
-if not workspace.Map:FindFirstChild("Spawn") then
-    warn("Este script é feito para Sea 1 (Blox Fruits). Saindo...")
-    return
-end
-
--- FUNÇÃO PRA PEGAR O MOB MAIS PERTO
-local function GetClosestMob()
+-- Função simples para encontrar o inimigo mais próximo
+local function GetClosestEnemy()
     local closest = nil
-    local dist = math.huge
-    for _, mob in pairs(workspace.Enemies:GetChildren()) do
-        if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
-            local mag = (mob.HumanoidRootPart.Position - rootPart.Position).Magnitude
-            if mag < dist and mag < 100 then -- só mobs até 100 studs perto
-                closest = mob
-                dist = mag
+    local minDistance = math.huge
+    
+    -- Verificar se workspace.Enemies existe
+    if not workspace:FindFirstChild("Enemies") then
+        print("Pasta Enemies não encontrada")
+        return nil
+    end
+    
+    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+        if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+            local distance = (Character.HumanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+            if distance < minDistance and distance < 100 then
+                minDistance = distance
+                closest = enemy
             end
         end
     end
+    
     return closest
 end
 
--- ATACAR MOB SIMPLESMENTE (CLICAR)
+-- Função simples para clicar (atacar)
 local function Attack()
+    local VirtualUser = game:GetService("VirtualUser")
     VirtualUser:CaptureController()
-    VirtualUser:ClickButton1(Vector2.new(1280, 672))
+    VirtualUser:ClickButton1(Vector2.new(500, 500))
 end
 
--- AUTO FARM
-local autoFarmThread = nil
-local function StartAutoFarm()
-    if autoFarmThread then
-        coroutine.close(autoFarmThread)
+-- Função para ir até o inimigo e atacar
+local function MoveToAndAttack(enemy)
+    if not Character:FindFirstChild("HumanoidRootPart") or not enemy:FindFirstChild("HumanoidRootPart") then
+        return
     end
-    autoFarmThread = coroutine.create(function()
-        while AutoFarmEnabled do
-            local mob = GetClosestMob()
-            if mob and mob:FindFirstChild("HumanoidRootPart") then
-                local mobPos = mob.HumanoidRootPart.Position
-                if (rootPart.Position - mobPos).Magnitude > 5 then
-                    local tween = TweenService:Create(rootPart, TweenInfo.new(0.3), {CFrame = CFrame.new(mobPos + Vector3.new(0,0,5))})
-                    tween:Play()
-                    tween.Completed:Wait()
-                end
-                Attack()
+    
+    -- Move para o inimigo
+    Character.Humanoid:MoveTo(enemy.HumanoidRootPart.Position)
+    
+    -- Espera chegar próximo
+    local distance = (Character.HumanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+    if distance <= 10 then
+        -- Ataca
+        Attack()
+    end
+end
+
+-- Função para iniciar/parar o Auto Farm
+local function ToggleAutoFarm()
+    AutoFarmEnabled = not AutoFarmEnabled
+    AutoFarmButton.Text = "Auto Farm: " .. (AutoFarmEnabled and "ON" or "OFF")
+    
+    print("Auto Farm: " .. (AutoFarmEnabled and "ON" or "OFF"))
+    
+    if AutoFarmEnabled then
+        -- Iniciar loop de Auto Farm
+        if AutoFarmLoop then
+            AutoFarmLoop:Disconnect()
+        end
+        
+        AutoFarmLoop = RunService.Heartbeat:Connect(function()
+            local enemy = GetClosestEnemy()
+            if enemy then
+                print("Inimigo encontrado: " .. enemy.Name)
+                MoveToAndAttack(enemy)
             else
-                wait(1)
+                print("Nenhum inimigo próximo")
             end
-            wait(0.3)
-        end
-    end)
-    coroutine.resume(autoFarmThread)
-end
-
--- KILL AURA
-local killAuraThread = nil
-local function StartKillAura()
-    if killAuraThread then
-        coroutine.close(killAuraThread)
-    end
-    killAuraThread = coroutine.create(function()
-        while KillAuraEnabled do
-            for _, mob in pairs(workspace.Enemies:GetChildren()) do
-                if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
-                    local mag = (mob.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                    if mag <= 20 then
-                        Attack()
-                    end
-                end
-            end
-            wait(0.1)
-        end
-    end)
-    coroutine.resume(killAuraThread)
-end
-
--- NOCLIP SIMPLES
-RunService.Stepped:Connect(function()
-    if NoClipEnabled and character then
-        for _, part in pairs(character:GetChildren()) do
-            if part:IsA("BasePart") and part.CanCollide == true then
-                part.CanCollide = false
-            end
+        end)
+    else
+        -- Parar loop de Auto Farm
+        if AutoFarmLoop then
+            AutoFarmLoop:Disconnect()
+            AutoFarmLoop = nil
         end
     end
-end)
-
--- CRIAR UI BÁSICA
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SimpleWirtzUI"
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 250, 0, 150)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
-MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = ScreenGui
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1,0,0,30)
-Title.BackgroundTransparency = 1
-Title.Text = "Wirtz Scripts - Sea 1"
-Title.TextColor3 = Color3.fromRGB(255,0,0)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 20
-Title.Parent = MainFrame
-
--- Button Template function
-local function CreateToggle(text, positionY, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 230, 0, 30)
-    btn.Position = UDim2.new(0, 10, 0, positionY)
-    btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.SourceSans
-    btn.TextSize = 18
-    btn.Text = text .. ": OFF"
-    btn.Parent = MainFrame
-
-    local enabled = false
-    btn.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        btn.Text = text .. (enabled and ": ON" or ": OFF")
-        callback(enabled)
-    end)
 end
 
--- Criar toggles
-CreateToggle("Auto Farm", 40, function(val)
-    AutoFarmEnabled = val
-    if val then StartAutoFarm() end
-end)
+-- Conectar o botão à função
+AutoFarmButton.MouseButton1Click:Connect(ToggleAutoFarm)
 
-CreateToggle("Kill Aura", 80, function(val)
-    KillAuraEnabled = val
-    if val then StartKillAura() end
-end)
+print("Script completamente carregado")
 
-CreateToggle("NoClip", 120, function(val)
-    NoClipEnabled = val
-end)
-
--- Mensagem inicial no chat
-player:WaitForChild("PlayerGui")
-player:WaitForChild("PlayerGui"):SetCore("ChatMakeSystemMessage", {
-    Text = "[Wirtz Scripts] Script iniciado para Sea 1 - Use a UI (toggle no centro da tela).",
-    Color = Color3.fromRGB(255,0,0),
-    Font = Enum.Font.SourceSansBold,
-    FontSize = Enum.FontSize.Size24
+-- Mensagem de notificação
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Script Teste",
+    Text = "Script carregado! Clique no botão para ativar o Auto Farm.",
+    Duration = 5
 })
-
-print("Wirtz Scripts inicializado com sucesso para Sea 1.")
-
