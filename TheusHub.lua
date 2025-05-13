@@ -1,234 +1,366 @@
--- Wirtz Scripts - Blox Fruits Ultimate
--- Versão: 4.0.1 Premium
+-- TheusHub.lua - Script principal para integração com o bot de keys
+-- Carregar a UI library
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Player = game:GetService("Players").LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+-- Variáveis globais
+local KeyAuthorized = false
+local KeyExpired = false
+local UserKey = ""
+local KeyData = nil
 
-getgenv().Settings = {
-    Main = {
-        AutoFarm = false,
-        FastAttack = false,
-        AutoQuest = false,
-        SelectedMob = "Bandit [Lv. 5]",
-        Distance = 5,
-        AutoHaki = false,
-        Mastery = false
-    },
-    Fruits = {
-        AutoSniper = false,
-        StoreFruit = false,
-        ESP = false
-    },
-    Combat = {
-        KillAura = false,
-        AutoSkills = false,
-        PerfectBlock = false
-    },
-    Player = {
-        Speed = 16,
-        Jump = 50,
-        NoClip = false,
-        GodMode = false
-    },
-    Raids = {
-        AutoRaid = false,
-        AutoChip = false,
-        AutoAwaken = false
-    },
-    Misc = {
-        AutoStats = false,
-        ChestFarm = false,
-        HopServer = false
-    }
-}
+-- Função para validar a key
+local function ValidateKey(key)
+    -- Simulação de validação - no futuro, isso fará uma requisição HTTP para seu servidor
+    -- que verificará a key contra o users.json do bot Discord
+    local success, result
+    
+    success, result = pcall(function()
+        -- Aqui você implementaria a verificação real com seu servidor
+        -- Por enquanto, vamos simular algumas keys válidas
+        local validKeys = {
+            ["WIRTZ-1234-5678-9012"] = {
+                user_id = "123456789",
+                plan = "weekly",
+                expiry = os.time() + 604800, -- 7 dias
+                hwid = nil
+            },
+            -- Adicione mais keys para testes
+        }
+        
+        if validKeys[key] then
+            if validKeys[key].expiry and validKeys[key].expiry < os.time() then
+                return false, "expired"
+            end
+            return true, validKeys[key]
+        end
+        return false, "invalid"
+    end)
+    
+    if not success then
+        return false, "error"
+    end
+    
+    return result
+end
 
-local Window = OrionLib:MakeWindow({
-    Name = "Wirtz Scripts Premium",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "WirtzConfig"
+-- Criar a janela de autenticação
+local AuthWindow = redzlib:MakeWindow({
+    Title = "Wirtz Scripts Premium",
+    SubTitle = "Autenticação",
+    SaveFolder = "WirtzScripts"
 })
 
--- Main Farm Functions
-local function GetMob()
-    local nearestMob = nil
-    local shortestDistance = math.huge
-    
-    for _, mob in pairs(workspace.Enemies:GetChildren()) do
-        if mob.Name == Settings.Main.SelectedMob and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
-            local distance = (mob.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).magnitude
-            if distance < shortestDistance then
-                shortestDistance = distance
-                nearestMob = mob
+-- Ícone de minimizar com imagem ajustada
+AuthWindow:AddMinimizeButton({
+    Button = {
+        Image = "rbxassetid://18751483361",
+        BackgroundTransparency = 0
+    },
+    Corner = {
+        CornerRadius = UDim.new(35, 1)
+    },
+})
+
+-- Criar aba de autenticação
+local AuthTab = AuthWindow:AddTab("Login")
+local AuthSection = AuthTab:AddSection("Insira sua Key")
+
+-- Campo para inserir a key
+AuthSection:AddTextBox({
+    Name = "Key",
+    Flag = "KeyInput",
+    Value = "",
+    Callback = function(Value)
+        UserKey = Value
+    end
+})
+
+-- Botão para verificar a key
+AuthSection:AddButton({
+    Name = "Verificar Key",
+    Callback = function()
+        if UserKey == "" then
+            AuthSection:AddParagraph("Erro", "Por favor, insira uma key válida!")
+            return
+        end
+        
+        AuthSection:AddParagraph("Verificando...", "Aguarde enquanto verificamos sua key.")
+        
+        -- Simular um pequeno delay para parecer que está verificando
+        task.wait(1.5)
+        
+        local isValid, data = ValidateKey(UserKey)
+        
+        if isValid == true then
+            KeyAuthorized = true
+            KeyData = data
+            AuthSection:AddParagraph("Sucesso! ✅", "Key validada com sucesso!")
+            
+            -- Verificar se a key está próxima de expirar
+            if KeyData.expiry then
+                local daysLeft = math.floor((KeyData.expiry - os.time()) / 86400)
+                if daysLeft < 3 then
+                    AuthSection:AddParagraph("⚠️ Aviso", "Sua key expira em " .. daysLeft .. " dias! Renove agora!")
+                end
             end
+            
+            task.wait(2)
+            AuthWindow:Destroy()
+            LoadMainScript()
+        elseif data == "expired" then
+            KeyExpired = true
+            AuthSection:AddParagraph("❌ Key Expirada", "Sua key expirou! Por favor, renove no Discord.")
+        else
+            AuthSection:AddParagraph("❌ Key Inválida", "A key inserida não é válida. Verifique e tente novamente.")
         end
     end
-    return nearestMob
-end
+})
 
-local function Attack()
-    if Settings.Main.FastAttack then
-        local args = {
-            [1] = "Combat",
-            [2] = "MouseButton1"
-        }
-        ReplicatedStorage.Remotes.Combat:FireServer(unpack(args))
+-- Informações sobre como obter uma key
+local InfoSection = AuthTab:AddSection("Informações")
+
+InfoSection:AddParagraph("Como obter uma key?", "Entre no nosso Discord e use o comando !menu para adquirir sua key.")
+
+InfoSection:AddButton({
+    Name = "Copiar Link do Discord",
+    Callback = function()
+        setclipboard("https://discord.gg/wirtzscripts")
+        InfoSection:AddParagraph("Link Copiado!", "O link do Discord foi copiado para sua área de transferência.")
     end
-end
+})
 
-local function EnableBuso()
-    if not Player.Character:FindFirstChild("HasBuso") then
-        ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
+-- Função para carregar o script principal após autenticação
+function LoadMainScript()
+    -- Criar a janela principal
+    local Window = redzlib:MakeWindow({
+        Title = "Wirtz Scripts Premium",
+        SubTitle = "by Wirtz Team",
+        SaveFolder = "WirtzScripts"
+    })
+    
+    -- Ícone de minimizar com imagem ajustada
+    Window:AddMinimizeButton({
+        Button = {
+            Image = "rbxassetid://18751483361",
+            BackgroundTransparency = 0
+        },
+        Corner = {
+            CornerRadius = UDim.new(35, 1)
+        },
+    })
+    
+    -- Informações da key
+    local InfoTab = Window:AddTab("Informações")
+    local KeyInfoSection = InfoTab:AddSection("Informações da Key")
+    
+    -- Mostrar informações da key
+    local planName = KeyData.plan:gsub("^%l", string.upper) -- Primeira letra maiúscula
+    KeyInfoSection:AddParagraph("Key", UserKey)
+    KeyInfoSection:AddParagraph("Plano", planName)
+    
+    if KeyData.expiry then
+        local expiryDate = os.date("%d/%m/%Y %H:%M", KeyData.expiry)
+        KeyInfoSection:AddParagraph("Expira em", expiryDate)
+        
+        -- Mostrar dias restantes
+        local daysLeft = math.floor((KeyData.expiry - os.time()) / 86400)
+        KeyInfoSection:AddParagraph("Dias Restantes", daysLeft .. " dias")
+    else
+        KeyInfoSection:AddParagraph("Expira em", "Nunca (Vitalício)")
     end
-end
-
-local function AutoFarm()
+    
+    -- Tabs principais do script
+    local MainTab = Window:AddTab("Principal")
+    local FarmingSection = MainTab:AddSection("Auto Farm")
+    
+    FarmingSection:AddToggle({
+        Name = "Auto Farm",
+        Flag = "AutoFarm",
+        Value = false,
+        Callback = function(Value)
+            -- Código para auto farm
+            if Value then
+                FarmingSection:AddParagraph("Auto Farm", "Auto Farm ativado!")
+            else
+                FarmingSection:AddParagraph("Auto Farm", "Auto Farm desativado!")
+            end
+        end
+    })
+    
+    FarmingSection:AddDropdown({
+        Name = "Selecione o Mob",
+        Flag = "SelectedMob",
+        List = {"Bandit", "Monkey", "Gorilla", "Marine"},
+        Value = "Bandit",
+        Callback = function(Value)
+            FarmingSection:AddParagraph("Mob Selecionado", "Você selecionou: " .. Value)
+        end
+    })
+    
+    -- Seção de combate
+    local CombatSection = MainTab:AddSection("Combate")
+    
+    CombatSection:AddToggle({
+        Name = "Kill Aura",
+        Flag = "KillAura",
+        Value = false,
+        Callback = function(Value)
+            -- Código para kill aura
+        end
+    })
+    
+    CombatSection:AddToggle({
+        Name = "Auto Skills",
+        Flag = "AutoSkills",
+        Value = false,
+        Callback = function(Value)
+            -- Código para auto skills
+        end
+    })
+    
+    CombatSection:AddToggle({
+        Name = "Perfect Block",
+        Flag = "PerfectBlock",
+        Value = false,
+        Callback = function(Value)
+            -- Código para perfect block
+        end
+    })
+    
+    -- Tab de teleportes
+    local TeleportTab = Window:AddTab("Teleporte")
+    local TeleportSection = TeleportTab:AddSection("Locais")
+    
+    local locations = {
+        "Starter Island",
+        "Marine Island",
+        "Desert Island",
+        "Frozen Island",
+        "Colosseum"
+    }
+    
+    for _, location in ipairs(locations) do
+        TeleportSection:AddButton({
+            Name = location,
+            Callback = function()
+                TeleportSection:AddParagraph("Teleporte", "Teleportando para " .. location .. "...")
+                -- Código de teleporte aqui
+            end
+        })
+    end
+    
+    -- Tab de frutas
+    local FruitTab = Window:AddTab("Frutas")
+    local FruitSection = FruitTab:AddSection("Frutas")
+    
+    FruitSection:AddToggle({
+        Name = "ESP Frutas",
+        Flag = "FruitESP",
+        Value = false,
+        Callback = function(Value)
+            -- Código para ESP de frutas
+        end
+    })
+    
+    FruitSection:AddToggle({
+        Name = "Auto Coletar Frutas",
+        Flag = "AutoCollectFruit",
+        Value = false,
+        Callback = function(Value)
+            -- Código para auto coletar frutas
+        end
+    })
+    
+    FruitSection:AddToggle({
+        Name = "Notificar Frutas",
+        Flag = "NotifyFruit",
+        Value = true,
+        Callback = function(Value)
+            -- Código para notificar quando uma fruta spawnar
+        end
+    })
+    
+    -- Tab de configurações
+    local SettingsTab = Window:AddTab("Configurações")
+    local UISection = SettingsTab:AddSection("Interface")
+    
+    UISection:AddColorPicker({
+        Name = "Cor do Tema",
+        Flag = "UIColor",
+        Value = Color3.fromRGB(255, 0, 0),
+        Callback = function(Value)
+            -- Código para mudar cor do tema
+        end
+    })
+    
+    UISection:AddSlider({
+        Name = "Transparência da UI",
+        Flag = "UITransparency",
+        Value = 0,
+        Min = 0,
+        Max = 100,
+        Callback = function(Value)
+            -- Código para ajustar transparência
+        end
+    })
+    
+    local MiscSection = SettingsTab:AddSection("Diversos")
+    
+    MiscSection:AddButton({
+        Name = "Copiar Discord",
+        Callback = function()
+            setclipboard("https://discord.gg/wirtzscripts")
+            MiscSection:AddParagraph("Link Copiado!", "O link do Discord foi copiado para sua área de transferência.")
+        end
+    })
+    
+    MiscSection:AddButton({
+        Name = "Sair do Script",
+        Callback = function()
+            Window:Destroy()
+        end
+    })
+    
+    -- Verificação anti-kick (para evitar detecção)
     spawn(function()
-        while Settings.Main.AutoFarm do
-            pcall(function()
-                local mob = GetMob()
-                if mob then
-                    if Settings.Main.AutoHaki then EnableBuso() end
-                    
-                    local targetPos = mob.HumanoidRootPart.Position
-                    local tweenInfo = TweenInfo.new(
-                        (Player.Character.HumanoidRootPart.Position - targetPos).magnitude/300,
-                        Enum.EasingStyle.Linear
-                    )
-                    
-                    local tween = TweenService:Create(
-                        Player.Character.HumanoidRootPart,
-                        tweenInfo,
-                        {CFrame = CFrame.new(targetPos) * CFrame.new(0,Settings.Main.Distance,0)}
-                    )
-                    tween:Play()
-                    
-                    repeat
-                        Attack()
-                        wait()
-                    until not Settings.Main.AutoFarm or not mob or mob.Humanoid.Health <= 0
-                end
-            end)
-            wait()
+        while wait(10) do
+            if not KeyAuthorized then
+                Window:Destroy()
+                game.Players.LocalPlayer:Kick("Autenticação inválida. Por favor, reinicie o script.")
+                break
+            end
+        end
+    end)
+    
+    -- Verificação periódica da key (a cada 5 minutos)
+    spawn(function()
+        while wait(300) do
+            local isStillValid, _ = ValidateKey(UserKey)
+            if not isStillValid then
+                Window:Destroy()
+                game.Players.LocalPlayer:Kick("Sua key expirou ou foi revogada. Por favor, renove no Discord.")
+                break
+            end
         end
     end)
 end
 
--- Tabs
-local MainTab = Window:MakeTab({Name = "Principal", Icon = "rbxassetid://4483345998"})
-local FruitTab = Window:MakeTab({Name = "Frutas", Icon = "rbxassetid://4483345998"})
-local CombatTab = Window:MakeTab({Name = "Combate", Icon = "rbxassetid://4483345998"})
-local RaidTab = Window:MakeTab({Name = "Raids", Icon = "rbxassetid://4483345998"})
-local PlayerTab = Window:MakeTab({Name = "Player", Icon = "rbxassetid://4483345998"})
-local MiscTab = Window:MakeTab({Name = "Misc", Icon = "rbxassetid://4483345998"})
-
--- Main Tab
-MainTab:AddToggle({
-    Name = "Auto Farm",
-    Default = false,
-    Callback = function(Value)
-        Settings.Main.AutoFarm = Value
-        if Value then AutoFarm() end
-    end
+-- Mensagem de boas-vindas
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Wirtz Scripts Premium",
+    Text = "Bem-vindo! Por favor, insira sua key para continuar.",
+    Duration = 5
 })
 
-MainTab:AddToggle({
-    Name = "Fast Attack",
-    Default = false,
-    Callback = function(Value)
-        Settings.Main.FastAttack = Value
-    end
-})
-
-MainTab:AddToggle({
-    Name = "Auto Haki",
-    Default = false,
-    Callback = function(Value)
-        Settings.Main.AutoHaki = Value
-    end
-})
-
-MainTab:AddDropdown({
-    Name = "Selecionar Mob",
-    Default = "Bandit [Lv. 5]",
-    Options = {
-        "Bandit [Lv. 5]",
-        "Monkey [Lv. 14]",
-        "Gorilla [Lv. 20]",
-        "Pirate [Lv. 35]",
-        "Brute [Lv. 45]",
-        "Desert Bandit [Lv. 60]",
-        "Desert Officer [Lv. 70]",
-        "Snow Bandit [Lv. 90]"
-    },
-    Callback = function(Value)
-        Settings.Main.SelectedMob = Value
-    end
-})
-
--- Player Tab
-PlayerTab:AddSlider({
-    Name = "Walk Speed",
-    Min = 16,
-    Max = 500,
-    Default = 16,
-    Color = Color3.fromRGB(255,0,0),
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(Value)
-        Settings.Player.Speed = Value
-        Player.Character.Humanoid.WalkSpeed = Value
-    end    
-})
-
-PlayerTab:AddSlider({
-    Name = "Jump Power",
-    Min = 50,
-    Max = 500,
-    Default = 50,
-    Color = Color3.fromRGB(255,0,0),
-    Increment = 1,
-    ValueName = "Jump",
-    Callback = function(Value)
-        Settings.Player.Jump = Value
-        Player.Character.Humanoid.JumpPower = Value
-    end    
-})
-
-PlayerTab:AddToggle({
-    Name = "No Clip",
-    Default = false,
-    Callback = function(Value)
-        Settings.Player.NoClip = Value
-        if Value then
-            RunService.Stepped:Connect(function()
-                if Settings.Player.NoClip then
-                    pcall(function()
-                        Player.Character.Humanoid:ChangeState(11)
-                    end)
-                end
-            end)
-        end
-    end
-})
-
--- Anti AFK
-Player.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
-
--- Initialize
-OrionLib:Init()
-
-OrionLib:MakeNotification({
-    Name = "Wirtz Scripts",
-    Content = "Script injetado com sucesso!",
-    Image = "rbxassetid://4483345998",
-    Time = 5
-})
+-- Verificar se o jogo é suportado
+if game.PlaceId == 2753915549 or game.PlaceId == 4442272183 or game.PlaceId == 7449423635 then
+    -- Blox Fruits
+    print("Wirtz Scripts Premium - Blox Fruits detectado!")
+else
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Jogo não suportado",
+        Text = "Este jogo não é suportado pelo Wirtz Scripts Premium.",
+        Duration = 5
+    })
+    return
+end
